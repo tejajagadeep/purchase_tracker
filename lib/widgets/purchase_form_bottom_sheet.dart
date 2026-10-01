@@ -39,7 +39,6 @@ class _PurchaseFormBottomSheetState
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
   late TextEditingController _plannedPriceController;
-  late TextEditingController _actualQuantityController;
   late TextEditingController _actualPriceController;
   late TextEditingController _notesController;
   late List<TextEditingController> _unitPriceControllers;
@@ -56,20 +55,16 @@ class _PurchaseFormBottomSheetState
 
     _nameController = TextEditingController(text: item?.name ?? '');
     final initialQty = item?.quantity ?? 1;
-    final initialBoughtQty = item?.purchasedQuantity ?? initialQty;
 
     _quantityController =
         TextEditingController(text: initialQty.toString());
-    _actualQuantityController = TextEditingController(
-      text: item != null ? initialBoughtQty.toString() : initialQty.toString(),
-    );
     _plannedPriceController = TextEditingController(
       text: item != null ? item.plannedPrice.toStringAsFixed(0) : '',
     );
 
     _actualPriceController = TextEditingController(
       text: item?.actualPrice != null
-          ? item!.actualPrice!.toStringAsFixed(0)
+          ? (initialQty > 1 ? item!.actualTotal.toStringAsFixed(0) : item!.actualPrice!.toStringAsFixed(0))
           : '',
     );
 
@@ -107,7 +102,6 @@ class _PurchaseFormBottomSheetState
     _nameController.dispose();
     _quantityController.dispose();
     _plannedPriceController.dispose();
-    _actualQuantityController.dispose();
     _actualPriceController.dispose();
     _notesController.dispose();
     for (final controller in _unitPriceControllers) {
@@ -131,35 +125,36 @@ class _PurchaseFormBottomSheetState
           _unitDates = _unitDates.sublist(0, newQty);
           _unitPriceControllers = _unitPriceControllers.sublist(0, newQty);
         }
+        _updateActualPriceFromUnits();
       });
     }
-  }
-
-  void _onActualQuantityChanged(String value) {
-    final boughtQty = int.tryParse(value) ?? 0;
-    final plannedQty = int.tryParse(_quantityController.text) ?? 1;
-
-    setState(() {
-      _unitDates = List.generate(plannedQty, (index) {
-        if (index < boughtQty) {
-          return (index < _unitDates.length && _unitDates[index] != null)
-              ? _unitDates[index]
-              : DateTime.now();
-        }
-        return null;
-      });
-      _updateActualPriceFromUnits();
-    });
   }
 
   void _updateActualPriceFromUnits() {
-    int boughtCount = 0;
-    for (int i = 0; i < _unitDates.length; i++) {
-      if (_unitDates[i] != null) {
-        boughtCount++;
+    final qty = int.tryParse(_quantityController.text) ?? 1;
+    final plannedP = double.tryParse(_plannedPriceController.text.trim()) ?? 0.0;
+
+    if (qty > 1) {
+      double sum = 0.0;
+      int boughtCount = 0;
+      for (int i = 0; i < _unitDates.length; i++) {
+        if (_unitDates[i] != null) {
+          boughtCount++;
+          final pText = i < _unitPriceControllers.length ? _unitPriceControllers[i].text.trim() : '';
+          final p = double.tryParse(pText);
+          if (p != null) {
+            sum += p;
+          } else {
+            sum += plannedP;
+          }
+        }
+      }
+      if (boughtCount > 0) {
+        _actualPriceController.text = sum.toStringAsFixed(0);
+      } else {
+        _actualPriceController.text = '';
       }
     }
-    _actualQuantityController.text = boughtCount.toString();
     setState(() {});
   }
 
@@ -173,6 +168,15 @@ class _PurchaseFormBottomSheetState
   double get _calculatedTotal {
     final qty = int.tryParse(_quantityController.text) ?? 1;
     final plannedPrice = double.tryParse(_plannedPriceController.text) ?? 0.0;
+    final mainActualText = _actualPriceController.text.trim();
+    final mainActual = double.tryParse(mainActualText);
+
+    if (qty == 1) {
+      if (mainActual != null && _unitDates.isNotEmpty && _unitDates[0] != null) {
+        return mainActual;
+      }
+      return plannedPrice;
+    }
 
     double actualSum = 0.0;
     int boughtCount = 0;
@@ -200,20 +204,34 @@ class _PurchaseFormBottomSheetState
       final qty = int.parse(_quantityController.text);
       final plannedPrice = double.parse(_plannedPriceController.text);
       final actualPriceText = _actualPriceController.text.trim();
-      final actualPrice =
+      final actualPriceInput =
           actualPriceText.isNotEmpty ? double.tryParse(actualPriceText) : null;
 
       final validDates = _unitDates.whereType<DateTime>().toList();
       final List<double?> unitPrices = [];
+      double sumUnitPrices = 0.0;
+      int boughtCount = 0;
+
       for (int i = 0; i < qty; i++) {
         if (i < _unitDates.length && _unitDates[i] != null) {
+          boughtCount++;
           final pText = i < _unitPriceControllers.length ? _unitPriceControllers[i].text.trim() : '';
           final p = double.tryParse(pText);
-          unitPrices.add(p); // When empty, p is null -> uses plannedPrice in calculations!
+          if (p != null) {
+            unitPrices.add(p);
+            sumUnitPrices += p;
+          } else {
+            unitPrices.add(null);
+            sumUnitPrices += plannedPrice;
+          }
         } else {
           unitPrices.add(null);
         }
       }
+
+      final double? finalActualPrice = qty > 1
+          ? (boughtCount > 0 ? sumUnitPrices / boughtCount : null)
+          : actualPriceInput;
 
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
@@ -223,7 +241,7 @@ class _PurchaseFormBottomSheetState
         name: _nameController.text.trim(),
         quantity: qty,
         plannedPrice: plannedPrice,
-        actualPrice: actualPrice,
+        actualPrice: finalActualPrice,
         unitActualPrices: unitPrices,
         category: _selectedCategory,
         purchaseDates: validDates,
@@ -443,7 +461,9 @@ class _PurchaseFormBottomSheetState
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.currency_rupee),
                       ),
-                      onChanged: (_) => setState(() {}),
+                      onChanged: (_) {
+                        _updateActualPriceFromUnits();
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Enter price';
@@ -461,41 +481,19 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Actual Quantity Bought & Actual Price Row
-              Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: TextFormField(
-                      controller: _actualQuantityController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Qty Bought',
-                        hintText: '0',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.shopping_cart_checkout),
-                      ),
-                      onChanged: _onActualQuantityChanged,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _actualPriceController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Actual Price Paid per item (₹) (Optional)',
-                        hintText: 'Leave empty if same as planned',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.sell_outlined),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ),
-                ],
+              // Actual Price (Full Width)
+              TextFormField(
+                controller: _actualPriceController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Actual Price (₹) (Optional)',
+                  hintText: 'Leave empty if same as planned',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.sell_outlined),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
 
               const SizedBox(height: 12),
@@ -527,8 +525,6 @@ class _PurchaseFormBottomSheetState
                   onChanged: (val) {
                     setState(() {
                       _unitDates[0] = val ? DateTime.now() : null;
-                      _actualQuantityController.text = val ? '1' : '0';
-                      _updateActualPriceFromUnits();
                     });
                   },
                 ),
@@ -681,7 +677,7 @@ class _PurchaseFormBottomSheetState
                                       isDense: true,
                                     ),
                                     onChanged: (_) {
-                                      setState(() {});
+                                      _updateActualPriceFromUnits();
                                     },
                                   ),
                                 ),
