@@ -1,0 +1,35 @@
+{
+    "name": "purchase_tracker",
+    "short_name": "purchase_tracker",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "Purchase Tracker is a personal expense and purchase management application that helps users plan, track, and manage purchases over time. Users can add items with quantities, planned prices, actual purchase prices, categories, purchase status, and notes. The app automatically calculates item totals, planned spending, actual spending, and remaining amounts, making it easy to manage budgets and track purchases.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
