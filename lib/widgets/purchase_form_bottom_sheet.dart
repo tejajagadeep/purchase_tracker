@@ -46,6 +46,7 @@ class _PurchaseFormBottomSheetState
   late String _selectedGroupId;
   String? _selectedSubGroupId;
   late List<DateTime?> _unitDates;
+  bool _isTotalActualPriceMode = true;
 
   @override
   void initState() {
@@ -54,16 +55,28 @@ class _PurchaseFormBottomSheetState
 
     _nameController = TextEditingController(text: item?.name ?? '');
     final initialQty = item?.quantity ?? 1;
+    _isTotalActualPriceMode = initialQty > 1;
+
     _quantityController =
         TextEditingController(text: initialQty.toString());
     _plannedPriceController = TextEditingController(
       text: item != null ? item.plannedPrice.toStringAsFixed(0) : '',
     );
-    _actualPriceController = TextEditingController(
-      text: item?.actualPrice != null
-          ? item!.actualPrice!.toStringAsFixed(0)
-          : '',
-    );
+
+    if (item?.actualPrice != null) {
+      if (initialQty > 1) {
+        _actualPriceController = TextEditingController(
+          text: (initialQty * item!.actualPrice!).toStringAsFixed(0),
+        );
+      } else {
+        _actualPriceController = TextEditingController(
+          text: item!.actualPrice!.toStringAsFixed(0),
+        );
+      }
+    } else {
+      _actualPriceController = TextEditingController(text: '');
+    }
+
     _notesController = TextEditingController(text: item?.notes ?? '');
 
     if (item != null && widget.categories.contains(item.category)) {
@@ -116,8 +129,19 @@ class _PurchaseFormBottomSheetState
 
   double get _calculatedTotal {
     final qty = int.tryParse(_quantityController.text) ?? 1;
-    final price = double.tryParse(_plannedPriceController.text) ?? 0.0;
-    return qty * price;
+    final plannedPrice = double.tryParse(_plannedPriceController.text) ?? 0.0;
+    final actualText = _actualPriceController.text.trim();
+    if (actualText.isNotEmpty) {
+      final enteredActual = double.tryParse(actualText);
+      if (enteredActual != null) {
+        if (qty > 1 && _isTotalActualPriceMode) {
+          return enteredActual;
+        } else {
+          return qty * enteredActual;
+        }
+      }
+    }
+    return qty * plannedPrice;
   }
 
   void _submitForm() {
@@ -125,8 +149,18 @@ class _PurchaseFormBottomSheetState
       final qty = int.parse(_quantityController.text);
       final plannedPrice = double.parse(_plannedPriceController.text);
       final actualPriceText = _actualPriceController.text.trim();
-      final actualPrice =
-          actualPriceText.isNotEmpty ? double.tryParse(actualPriceText) : null;
+
+      double? unitActualPrice;
+      if (actualPriceText.isNotEmpty) {
+        final enteredActual = double.tryParse(actualPriceText);
+        if (enteredActual != null) {
+          if (qty > 1 && _isTotalActualPriceMode) {
+            unitActualPrice = enteredActual / qty;
+          } else {
+            unitActualPrice = enteredActual;
+          }
+        }
+      }
 
       final validDates = _unitDates.whereType<DateTime>().toList();
 
@@ -138,7 +172,7 @@ class _PurchaseFormBottomSheetState
         name: _nameController.text.trim(),
         quantity: qty,
         plannedPrice: plannedPrice,
-        actualPrice: actualPrice,
+        actualPrice: unitActualPrice,
         category: _selectedCategory,
         purchaseDates: validDates,
         notes: _notesController.text.trim().isEmpty
@@ -157,6 +191,7 @@ class _PurchaseFormBottomSheetState
     final isEditing = widget.existingItem != null;
     final purchasedUnitCount = _unitDates.where((d) => d != null).length;
     final availableSubs = _availableSubGroups;
+    final currentQty = int.tryParse(_quantityController.text) ?? 1;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -379,18 +414,63 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Actual Paid Price (Optional)
+              // Actual Paid Price Section
+              if (currentQty > 1) ...[
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment<bool>(
+                      value: true,
+                      label: Text('Total Paid'),
+                      icon: Icon(Icons.receipt_outlined, size: 16),
+                    ),
+                    ButtonSegment<bool>(
+                      value: false,
+                      label: Text('Price Per Item'),
+                      icon: Icon(Icons.sell_outlined, size: 16),
+                    ),
+                  ],
+                  selected: {_isTotalActualPriceMode},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _isTotalActualPriceMode = selection.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+
               TextFormField(
                 controller: _actualPriceController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Actual Price Paid per item (Optional)',
-                  hintText: 'Leave empty if same as planned',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.sell_outlined),
+                decoration: InputDecoration(
+                  labelText: currentQty > 1
+                      ? (_isTotalActualPriceMode
+                          ? 'Total Actual Paid for all $currentQty items (₹)'
+                          : 'Actual Price Paid per item (₹)')
+                      : 'Actual Price Paid (₹) (Optional)',
+                  hintText: currentQty > 1
+                      ? (_isTotalActualPriceMode
+                          ? 'e.g. 447 for all $currentQty items'
+                          : 'e.g. 50 per item')
+                      : 'Leave empty if same as planned',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.sell_outlined),
+                  helperText: (currentQty > 1 &&
+                          _actualPriceController.text.trim().isNotEmpty)
+                      ? () {
+                          final val = double.tryParse(_actualPriceController.text.trim());
+                          if (val == null) return null;
+                          if (_isTotalActualPriceMode) {
+                            return '₹${val.toStringAsFixed(0)} total ÷ $currentQty items = ${formatCurrency(val / currentQty)} per item';
+                          } else {
+                            return '₹${val.toStringAsFixed(0)} × $currentQty items = ${formatCurrency(val * currentQty)} total';
+                          }
+                        }()
+                      : null,
                 ),
+                onChanged: (_) => setState(() {}),
               ),
 
               const SizedBox(height: 12),
