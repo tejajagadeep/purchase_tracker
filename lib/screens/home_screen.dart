@@ -1088,44 +1088,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _resetToDefaults() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Sample Data'),
-        content: const Text(
-          'This will reset your purchases list back to the default touring accessories list. Continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final initial = getInitialSampleData();
-      setState(() {
-        _items = initial;
-      });
-      await _saveItems();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sample data restored!')),
-        );
-      }
-    }
-  }
-
   void _openManageCategories() {
     Navigator.push(
       context,
@@ -1470,9 +1432,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'reset') {
-                _resetToDefaults();
-              } else if (value == 'calendar') {
+              if (value == 'calendar') {
                 _openCalendarView();
               } else if (value == 'copy_template') {
                 _showCopyFromTemplateDialog();
@@ -1561,16 +1521,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(Icons.filter_alt_off_outlined, size: 20),
                     SizedBox(width: 8),
                     Text('Reset Filters'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'reset',
-                child: Row(
-                  children: [
-                    Icon(Icons.restart_alt, size: 20),
-                    SizedBox(width: 8),
-                    Text('Load Sample Data'),
                   ],
                 ),
               ),
