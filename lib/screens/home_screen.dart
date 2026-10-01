@@ -155,6 +155,61 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _confirmDeleteSubGroup(SubGroup subGroup) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final subGroupItems = _items.where((i) => i.subGroupId == subGroup.id).toList();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Sub-Group "${subGroup.name}"?'),
+        content: Text(
+          subGroupItems.isEmpty
+              ? 'Are you sure you want to delete this sub-group?'
+              : 'Are you sure you want to delete "${subGroup.name}" and all ${subGroupItems.length} purchase items inside it?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Delete All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _subGroups.removeWhere((sg) => sg.id == subGroup.id);
+        if (_activeSubGroup?.id == subGroup.id) {
+          _activeSubGroup = null;
+        }
+        // Remove all items belonging to this deleted sub-group
+        _items.removeWhere((i) => i.subGroupId == subGroup.id);
+      });
+
+      final allSubs = await _repository.getSubGroups();
+      allSubs.removeWhere((sg) => sg.id == subGroup.id);
+      await _repository.saveSubGroups(allSubs);
+
+      if (_activeGroup != null) {
+        await _repository.saveItemsForGroup(_activeGroup!.id, _items);
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Deleted Sub-Group "${subGroup.name}" and its items.'),
+        ),
+      );
+    }
+  }
+
   void _togglePinGroup(PurchaseGroup group) async {
     final messenger = ScaffoldMessenger.of(context);
     final updatedGroup = group.copyWith(isPinned: !group.isPinned);
@@ -1838,6 +1893,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               onPinSubGroup: () => _togglePinSubGroup(sg),
                               onEditSubGroup: () => _showEditSubGroupDialog(sg),
+                              onDeleteSubGroup: () => _confirmDeleteSubGroup(sg),
                             );
                           },
                           childCount: _subGroups.length,
