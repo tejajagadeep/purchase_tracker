@@ -11,6 +11,7 @@ import '../widgets/summary_card.dart';
 import 'backup_restore_screen.dart';
 import 'calendar_expense_screen.dart';
 import 'manage_categories_screen.dart';
+import 'manage_templates_screen.dart';
 import '../utils/formatters.dart';
 
 enum SortOption {
@@ -463,6 +464,245 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showCopyFromTemplateDialog({String? preSelectedSubGroupId}) async {
+    final templateGroups = await _repository.getTemplateGroups();
+    if (templateGroups.isEmpty) return;
+
+    String selectedTemplateId = templateGroups.first.id;
+    String? targetSubGroupId = preSelectedSubGroupId ?? _activeSubGroup?.id;
+
+    List<PurchaseItem> templateItems = await _repository.getTemplateItems(
+      templateGroupId: selectedTemplateId,
+    );
+    Set<String> selectedItemIds = templateItems.map((i) => i.id).toSet();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Copy from Template'),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, size: 20),
+                tooltip: 'Manage Templates',
+                onPressed: () {
+                  Navigator.pop(context);
+                  _openManageTemplates();
+                },
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select template preset to copy items into "${_activeGroup?.name}":',
+                ),
+                const SizedBox(height: 12),
+
+                // Template Group Selector Dropdown
+                DropdownButtonFormField<String>(
+                  initialValue: selectedTemplateId,
+                  decoration: const InputDecoration(
+                    labelText: 'Template Preset',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.copy),
+                  ),
+                  items: templateGroups.map((tg) {
+                    return DropdownMenuItem(
+                      value: tg.id,
+                      child: Text(tg.name),
+                    );
+                  }).toList(),
+                  onChanged: (val) async {
+                    if (val != null) {
+                      selectedTemplateId = val;
+                      final newItems = await _repository.getTemplateItems(
+                        templateGroupId: selectedTemplateId,
+                      );
+                      setDialogState(() {
+                        templateItems = newItems;
+                        selectedItemIds = newItems.map((i) => i.id).toSet();
+                      });
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                // Target Sub-Group Dropdown Selector
+                if (_subGroups.isNotEmpty) ...[
+                  DropdownButtonFormField<String?>(
+                    initialValue: targetSubGroupId,
+                    decoration: const InputDecoration(
+                      labelText: 'Target Month / Sub-Group',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.folder_special_outlined),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Main Group (All Months/Items)'),
+                      ),
+                      ..._subGroups.map((sg) {
+                        return DropdownMenuItem<String?>(
+                          value: sg.id,
+                          child: Text(sg.name),
+                        );
+                      }),
+                    ],
+                    onChanged: (val) {
+                      setDialogState(() {
+                        targetSubGroupId = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Items (${selectedItemIds.length}/${templateItems.length})',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setDialogState(() {
+                          if (selectedItemIds.length == templateItems.length) {
+                            selectedItemIds.clear();
+                          } else {
+                            selectedItemIds = templateItems.map((i) => i.id).toSet();
+                          }
+                        });
+                      },
+                      child: Text(
+                        selectedItemIds.length == templateItems.length
+                            ? 'Deselect All'
+                            : 'Select All',
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: templateItems.length,
+                    itemBuilder: (context, index) {
+                      final item = templateItems[index];
+                      final isSelected = selectedItemIds.contains(item.id);
+                      return CheckboxListTile(
+                        value: isSelected,
+                        title: Text(item.name),
+                        subtitle: Text(
+                          'Qty: ${item.quantity} • ${formatCurrency(item.plannedPrice)} • ${item.category}',
+                        ),
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              selectedItemIds.add(item.id);
+                            } else {
+                              selectedItemIds.remove(item.id);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.icon(
+              onPressed: selectedItemIds.isEmpty
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      _copyTemplateItemsToActiveGroup(
+                        templateItems
+                            .where((i) => selectedItemIds.contains(i.id))
+                            .toList(),
+                        targetSubGroupId,
+                      );
+                    },
+              icon: const Icon(Icons.copy),
+              label: const Text('Copy to Selected Sub-Group'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _copyTemplateItemsToActiveGroup(
+    List<PurchaseItem> itemsToCopy,
+    String? targetSubGroupId,
+  ) async {
+    if (_activeGroup == null || itemsToCopy.isEmpty) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final List<String> newlyAddedIds = [];
+
+    final copiedItems = itemsToCopy.map((item) {
+      final newId = '${DateTime.now().microsecondsSinceEpoch}_${newlyAddedIds.length}';
+      newlyAddedIds.add(newId);
+      return item.copyWith(
+        id: newId,
+        groupId: _activeGroup!.id,
+        subGroupId: targetSubGroupId,
+        purchaseDates: [], // Reset to pending for fresh list
+      );
+    }).toList();
+
+    setState(() {
+      _items.addAll(copiedItems);
+    });
+    await _saveItems();
+
+    String destName = _activeGroup!.name;
+    if (targetSubGroupId != null) {
+      final match = _subGroups.where((sg) => sg.id == targetSubGroupId);
+      if (match.isNotEmpty) {
+        destName = match.first.name;
+      }
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text('Copied ${copiedItems.length} template items into "$destName"!'),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () async {
+            setState(() {
+              _items.removeWhere((item) => newlyAddedIds.contains(item.id));
+            });
+            await _saveItems();
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Reverted template copy!')),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _showMoveGroupDialog(PurchaseGroup sourceGroup) {
     final otherGroups = _groups.where((g) => g.id != sourceGroup.id).toList();
     if (otherGroups.isEmpty) {
@@ -689,6 +929,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openManageTemplates() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ManageTemplatesScreen(),
+      ),
+    );
+  }
+
   void _openBackupRestore() {
     Navigator.push(
       context,
@@ -808,6 +1057,28 @@ class _HomeScreenState extends State<HomeScreen> {
         _items[updatedIndex] = updatedItem;
       });
       _saveItems();
+    }
+  }
+
+  void _addUnitBoughtToday(PurchaseItem item) {
+    if (item.isPurchased) return;
+    final updatedIndex = _items.indexWhere((element) => element.id == item.id);
+    if (updatedIndex != -1) {
+      final messenger = ScaffoldMessenger.of(context);
+      final newDates = List<DateTime>.from(item.purchaseDates)..add(DateTime.now());
+      final updatedItem = item.copyWith(
+        purchaseDates: newDates,
+      );
+      setState(() {
+        _items[updatedIndex] = updatedItem;
+      });
+      _saveItems();
+      messenger.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          content: Text('Recorded 1 unit of "${item.name}" bought today!'),
+        ),
+      );
     }
   }
 
@@ -953,6 +1224,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 _resetToDefaults();
               } else if (value == 'calendar') {
                 _openCalendarView();
+              } else if (value == 'copy_template') {
+                _showCopyFromTemplateDialog();
+              } else if (value == 'manage_templates') {
+                _openManageTemplates();
               } else if (value == 'manage_categories') {
                 _openManageCategories();
               } else if (value == 'backup_restore') {
@@ -969,6 +1244,26 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'copy_template',
+                child: Row(
+                  children: [
+                    Icon(Icons.copy_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Copy Items from Template'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'manage_templates',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_note_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Manage Master Templates'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'calendar',
                 child: Row(
@@ -1084,6 +1379,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 },
                               ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy_outlined, size: 20),
+                            tooltip: 'Copy Template into Sub-Group',
+                            onPressed: () => _showCopyFromTemplateDialog(
+                              preSelectedSubGroupId: _activeSubGroup?.id,
                             ),
                           ),
                           IconButton(
@@ -1303,6 +1605,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   item: item,
                                   onTap: () => _addOrEditItem(existingItem: item),
                                   onTogglePurchased: () => _togglePurchased(item),
+                                  onAddUnitBought: () => _addUnitBoughtToday(item),
                                 ),
                               );
                             },

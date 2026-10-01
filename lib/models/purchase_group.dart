@@ -4,6 +4,7 @@ class PurchaseGroup {
   final String? description;
   final String iconName;
   final double? targetBudget;
+  final bool isTemplate;
   final DateTime createdAt;
 
   PurchaseGroup({
@@ -12,6 +13,7 @@ class PurchaseGroup {
     this.description,
     this.iconName = 'two_wheeler',
     this.targetBudget,
+    this.isTemplate = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -21,6 +23,7 @@ class PurchaseGroup {
     String? description,
     String? iconName,
     double? targetBudget,
+    bool? isTemplate,
     DateTime? createdAt,
   }) {
     return PurchaseGroup(
@@ -29,6 +32,7 @@ class PurchaseGroup {
       description: description ?? this.description,
       iconName: iconName ?? this.iconName,
       targetBudget: targetBudget ?? this.targetBudget,
+      isTemplate: isTemplate ?? this.isTemplate,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -40,6 +44,7 @@ class PurchaseGroup {
       'description': description,
       'iconName': iconName,
       'targetBudget': targetBudget,
+      'isTemplate': isTemplate,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -53,6 +58,7 @@ class PurchaseGroup {
       targetBudget: map['targetBudget'] != null
           ? (map['targetBudget'] as num).toDouble()
           : null,
+      isTemplate: map['isTemplate'] ?? false,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : DateTime.now(),

@@ -21,6 +21,8 @@ class CategoryConstants {
     'Health & Medical',
     'Bills & Utilities',
     'Rent & Housing',
+    'Loan & EMI',
+    'Debt & Repayment',
     'Entertainment',
     'Gifts & Donations',
     'Sports & Fitness',
@@ -45,6 +47,8 @@ class CategoryConstants {
     'Health & Medical': Icons.medical_services,
     'Bills & Utilities': Icons.receipt_long,
     'Rent & Housing': Icons.home,
+    'Loan & EMI': Icons.account_balance,
+    'Debt & Repayment': Icons.request_quote,
     'Entertainment': Icons.movie,
     'Gifts & Donations': Icons.card_giftcard,
     'Sports & Fitness': Icons.fitness_center,
@@ -69,6 +73,10 @@ class CategoryConstants {
     Icons.medical_services,
     Icons.receipt_long,
     Icons.home,
+    Icons.account_balance,
+    Icons.request_quote,
+    Icons.credit_card,
+    Icons.account_balance_wallet,
     Icons.movie,
     Icons.card_giftcard,
     Icons.fitness_center,
@@ -83,6 +91,7 @@ class CategoryConstants {
     Icons.monetization_on,
     Icons.cleaning_services,
     Icons.local_mall,
+    Icons.handshake,
     Icons.category_outlined,
   ];
 
@@ -102,6 +111,12 @@ class CategoryConstants {
     }
     // Keyword match
     final lower = category.toLowerCase();
+    if (lower.contains('loan') || lower.contains('emi') || lower.contains('bank') || lower.contains('mortgage')) {
+      return Icons.account_balance;
+    }
+    if (lower.contains('debt') || lower.contains('repay') || lower.contains('credit') || lower.contains('borrow') || lower.contains('lend')) {
+      return Icons.request_quote;
+    }
     if (lower.contains('gear') || lower.contains('riding')) return Icons.sports_motorsports;
     if (lower.contains('camp')) return Icons.other_houses;
     if (lower.contains('camera') || lower.contains('phone') || lower.contains('electronic')) return Icons.photo_camera;

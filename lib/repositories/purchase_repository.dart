@@ -9,7 +9,9 @@ abstract class IPurchaseRepository {
   Future<List<PurchaseItem>> getItems({String? groupId, String? subGroupId});
   Future<void> saveItems(List<PurchaseItem> items);
   Future<void> saveItemsForGroup(String groupId, List<PurchaseItem> groupItems);
-  Future<List<PurchaseGroup>> getGroups();
+  Future<List<PurchaseGroup>> getGroups({bool includeTemplates = false});
+  Future<List<PurchaseGroup>> getTemplateGroups();
+  Future<List<PurchaseItem>> getTemplateItems({String? templateGroupId});
   Future<void> saveGroups(List<PurchaseGroup> groups);
   Future<void> deleteGroup(String groupId);
   Future<List<SubGroup>> getSubGroups({String? groupId});
@@ -78,7 +80,7 @@ class PurchaseRepository implements IPurchaseRepository {
   }
 
   @override
-  Future<List<PurchaseGroup>> getGroups() async {
+  Future<List<PurchaseGroup>> getGroups({bool includeTemplates = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonString = prefs.getString(_groupsStorageKey);
@@ -86,7 +88,11 @@ class PurchaseRepository implements IPurchaseRepository {
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonString);
         if (decoded.isNotEmpty) {
-          return decoded.map((g) => PurchaseGroup.fromMap(g)).toList();
+          final list = decoded.map((g) => PurchaseGroup.fromMap(g)).toList();
+          if (!includeTemplates) {
+            return list.where((g) => !g.isTemplate).toList();
+          }
+          return list;
         }
       }
     } catch (_) {}
@@ -103,6 +109,48 @@ class PurchaseRepository implements IPurchaseRepository {
   }
 
   @override
+  Future<List<PurchaseGroup>> getTemplateGroups() async {
+    final allGroups = await getGroups(includeTemplates: true);
+    final templates = allGroups.where((g) => g.isTemplate).toList();
+    if (templates.isEmpty) {
+      final defaults = getInitialTemplateGroups();
+      final updatedGroups = [...allGroups, ...defaults];
+      await saveGroups(updatedGroups);
+
+      // Save template items
+      final currentItems = await getItems();
+      final templateItems = getInitialTemplateItems();
+      await saveItems([...currentItems, ...templateItems]);
+
+      return defaults;
+    }
+    return templates;
+  }
+
+  @override
+  Future<List<PurchaseItem>> getTemplateItems({String? templateGroupId}) async {
+    final allItems = await getItems();
+    final templateGroups = await getTemplateGroups();
+    final templateGroupIds = templateGroups.map((g) => g.id).toSet();
+
+    final items = allItems.where((i) => templateGroupIds.contains(i.groupId)).toList();
+
+    if (items.isEmpty) {
+      final defaultTemplateItems = getInitialTemplateItems();
+      await saveItems([...allItems, ...defaultTemplateItems]);
+      if (templateGroupId != null) {
+        return defaultTemplateItems.where((i) => i.groupId == templateGroupId).toList();
+      }
+      return defaultTemplateItems;
+    }
+
+    if (templateGroupId != null) {
+      return items.where((i) => i.groupId == templateGroupId).toList();
+    }
+    return items;
+  }
+
+  @override
   Future<void> saveGroups(List<PurchaseGroup> groups) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -115,7 +163,7 @@ class PurchaseRepository implements IPurchaseRepository {
   @override
   Future<void> deleteGroup(String groupId) async {
     try {
-      final groups = await getGroups();
+      final groups = await getGroups(includeTemplates: true);
       groups.removeWhere((g) => g.id == groupId);
       await saveGroups(groups);
 

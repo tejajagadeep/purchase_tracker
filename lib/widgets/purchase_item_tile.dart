@@ -7,12 +7,14 @@ class PurchaseItemTile extends StatelessWidget {
   final PurchaseItem item;
   final VoidCallback onTap;
   final VoidCallback onTogglePurchased;
+  final VoidCallback? onAddUnitBought;
 
   const PurchaseItemTile({
     super.key,
     required this.item,
     required this.onTap,
     required this.onTogglePurchased,
+    this.onAddUnitBought,
   });
 
   String _formatDatesSummary() {
@@ -128,6 +130,16 @@ class PurchaseItemTile extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // Quick +1 Unit Button for multi-quantity items
+              if (item.quantity > 1 && !item.isPurchased && onAddUnitBought != null) ...[
+                IconButton(
+                  icon: const Icon(Icons.add_circle, color: Colors.blue, size: 22),
+                  tooltip: 'Record 1 Bought Today',
+                  onPressed: onAddUnitBought,
+                ),
+                const SizedBox(width: 4),
+              ],
 
               // Price, Status & Purchase Date
               Column(
