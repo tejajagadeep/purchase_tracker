@@ -131,12 +131,22 @@ class CategoryManager {
       final prefs = await SharedPreferences.getInstance();
       await loadCategoryIcons(prefs);
       final String? jsonString = prefs.getString(_categoriesKey);
+
+      List<String> savedList = [];
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonString);
         if (decoded.isNotEmpty) {
-          return decoded.map((e) => e.toString()).toList();
+          savedList = decoded.map((e) => e.toString()).toList();
         }
       }
+
+      final mergedSet = <String>{};
+      mergedSet.addAll(CategoryConstants.defaultCategories);
+      mergedSet.addAll(savedList);
+
+      final mergedList = mergedSet.toList();
+      await saveCategories(mergedList);
+      return mergedList;
     } catch (_) {}
     return List<String>.from(CategoryConstants.defaultCategories);
   }
