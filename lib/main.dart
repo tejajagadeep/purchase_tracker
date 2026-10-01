@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const PurchaseTracker());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PurchaseTracker extends StatelessWidget {
+  const PurchaseTracker({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Purchase Tracker',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -29,8 +30,115 @@ class MyApp extends StatelessWidget {
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class Purchase {
+  final String name;
+  final int quantity;
+  final double plannedPrice;
+  final double actualPrice;
+  final String category;
+  final DateTime purchaseDate;
+
+  Purchase({
+    required this.name,
+    required this.quantity,
+    required this.plannedPrice,
+    required this.actualPrice,
+    required this.category,
+    required this.purchaseDate,
+});
+  double get total => plannedPrice * quantity;
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Purchase> _items = [];
+
+  double get totalPlanned {
+    return _items.fold(0.0, (total, item) => total + item.plannedPrice);
+  }
+
+  double get totalActual {
+    return _items.fold(0.0, (total, item) => total + item.actualPrice);
+  }
+
+  double get remaining {
+    return totalPlanned - totalActual;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Purchase Tracker'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Total Planned:',
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              '₹${totalPlanned.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontSize: 32.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrangeAccent,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Items',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _items.length,
+                itemBuilder: (context, index) {
+                  final item = _items[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      title: Text(item.name),
+                      subtitle: Text('${item.quantity} x ₹ ${item.plannedPrice
+                          .toStringAsFixed(0)}'),
+                      trailing: Text(
+                        '₹${item.total.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _addItem();
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
