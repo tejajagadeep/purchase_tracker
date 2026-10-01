@@ -110,6 +110,32 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _togglePinGroup(PurchaseGroup group) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final updatedGroup = group.copyWith(isPinned: !group.isPinned);
+    final index = _groups.indexWhere((g) => g.id == group.id);
+    if (index != -1) {
+      _groups[index] = updatedGroup;
+      _groups.sort((a, b) {
+        if (a.isPinned == b.isPinned) {
+          return a.createdAt.compareTo(b.createdAt);
+        }
+        return a.isPinned ? -1 : 1;
+      });
+      setState(() {});
+      await _repository.saveGroups(_groups);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            updatedGroup.isPinned
+                ? 'Pinned "${group.name}" to top!'
+                : 'Unpinned "${group.name}"',
+          ),
+        ),
+      );
+    }
+  }
+
   void _openGroupSelector() {
     showModalBottomSheet(
       context: context,
@@ -163,11 +189,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        title: Text(
-                          group.name,
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
+                        title: Row(
+                          children: [
+                            if (group.isPinned) ...[
+                              const Icon(Icons.push_pin, size: 14, color: Colors.orange),
+                              const SizedBox(width: 4),
+                            ],
+                            Expanded(
+                              child: Text(
+                                group.name,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                         subtitle: Text(
                           group.targetBudget != null
@@ -185,7 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             PopupMenuButton<String>(
                               icon: const Icon(Icons.more_vert, size: 20),
                               onSelected: (action) {
-                                if (action == 'edit') {
+                                if (action == 'pin') {
+                                  Navigator.pop(context);
+                                  _togglePinGroup(group);
+                                } else if (action == 'edit') {
                                   Navigator.pop(context);
                                   _showEditGroupDialog(group);
                                 } else if (action == 'move') {
@@ -197,6 +237,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 }
                               },
                               itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'pin',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        group.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(group.isPinned ? 'Unpin Group' : 'Pin Group to Top'),
+                                    ],
+                                  ),
+                                ),
                                 const PopupMenuItem(
                                   value: 'edit',
                                   child: Row(

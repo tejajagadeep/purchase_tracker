@@ -89,10 +89,14 @@ class PurchaseRepository implements IPurchaseRepository {
         final List<dynamic> decoded = jsonDecode(jsonString);
         if (decoded.isNotEmpty) {
           final list = decoded.map((g) => PurchaseGroup.fromMap(g)).toList();
-          if (!includeTemplates) {
-            return list.where((g) => !g.isTemplate).toList();
-          }
-          return list;
+          final filtered = includeTemplates ? list : list.where((g) => !g.isTemplate).toList();
+          filtered.sort((a, b) {
+            if (a.isPinned == b.isPinned) {
+              return a.createdAt.compareTo(b.createdAt);
+            }
+            return a.isPinned ? -1 : 1;
+          });
+          return filtered;
         }
       }
     } catch (_) {}

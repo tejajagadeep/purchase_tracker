@@ -5,6 +5,7 @@ class PurchaseGroup {
   final String iconName;
   final double? targetBudget;
   final bool isTemplate;
+  final bool isPinned;
   final DateTime createdAt;
 
   PurchaseGroup({
@@ -14,6 +15,7 @@ class PurchaseGroup {
     this.iconName = 'two_wheeler',
     this.targetBudget,
     this.isTemplate = false,
+    this.isPinned = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -24,6 +26,7 @@ class PurchaseGroup {
     String? iconName,
     double? targetBudget,
     bool? isTemplate,
+    bool? isPinned,
     DateTime? createdAt,
   }) {
     return PurchaseGroup(
@@ -33,6 +36,7 @@ class PurchaseGroup {
       iconName: iconName ?? this.iconName,
       targetBudget: targetBudget ?? this.targetBudget,
       isTemplate: isTemplate ?? this.isTemplate,
+      isPinned: isPinned ?? this.isPinned,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -45,6 +49,7 @@ class PurchaseGroup {
       'iconName': iconName,
       'targetBudget': targetBudget,
       'isTemplate': isTemplate,
+      'isPinned': isPinned,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -59,6 +64,7 @@ class PurchaseGroup {
           ? (map['targetBudget'] as num).toDouble()
           : null,
       isTemplate: map['isTemplate'] ?? false,
+      isPinned: map['isPinned'] ?? false,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : DateTime.now(),
