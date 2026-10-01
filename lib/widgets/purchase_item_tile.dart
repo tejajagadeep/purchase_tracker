@@ -15,6 +15,16 @@ class PurchaseItemTile extends StatelessWidget {
     required this.onTogglePurchased,
   });
 
+  String _formatDatesSummary() {
+    if (item.purchaseDates.isEmpty) return 'Pending';
+    if (item.quantity == 1) {
+      return formatDate(item.purchaseDates.first);
+    }
+    // Multiple quantities
+    final datesStr = item.purchaseDates.map((d) => '${d.day}/${d.month}').join(', ');
+    return '${item.purchasedQuantity}/${item.quantity} bought ($datesStr)';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -139,32 +149,40 @@ class PurchaseItemTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: item.isPurchased
                           ? Colors.green.shade50
-                          : Colors.orange.shade50,
+                          : (item.purchasedQuantity > 0
+                              ? Colors.blue.shade50
+                              : Colors.orange.shade50),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color: item.isPurchased
                             ? Colors.green.shade300
-                            : Colors.orange.shade300,
+                            : (item.purchasedQuantity > 0
+                                ? Colors.blue.shade300
+                                : Colors.orange.shade300),
                         width: 0.5,
                       ),
                     ),
                     child: Text(
-                      item.isPurchased ? 'Purchased' : 'Pending',
+                      item.isPurchased
+                          ? 'Purchased'
+                          : (item.purchasedQuantity > 0
+                              ? '${item.purchasedQuantity}/${item.quantity} Bought'
+                              : 'Pending'),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: item.isPurchased
                             ? Colors.green.shade800
-                            : Colors.orange.shade900,
+                            : (item.purchasedQuantity > 0
+                                ? Colors.blue.shade900
+                                : Colors.orange.shade900),
                         fontWeight: FontWeight.w600,
                         fontSize: 10,
                       ),
                     ),
                   ),
-                  if (item.isPurchased) ...[
+                  if (item.purchaseDates.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      item.datePurchased != null
-                          ? formatDate(item.datePurchased!)
-                          : 'Purchased',
+                      _formatDatesSummary(),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.outline,
                         fontSize: 9,

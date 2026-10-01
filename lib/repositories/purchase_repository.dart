@@ -7,6 +7,7 @@ import '../data/sample_data.dart';
 abstract class IPurchaseRepository {
   Future<List<PurchaseItem>> getItems({String? groupId});
   Future<void> saveItems(List<PurchaseItem> items);
+  Future<void> saveItemsForGroup(String groupId, List<PurchaseItem> groupItems);
   Future<List<PurchaseGroup>> getGroups();
   Future<void> saveGroups(List<PurchaseGroup> groups);
   Future<void> deleteGroup(String groupId);
@@ -22,25 +23,30 @@ class PurchaseRepository implements IPurchaseRepository {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonString = prefs.getString(_itemsStorageKey);
 
+      List<PurchaseItem> allItems = [];
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonString);
-        if (decoded.isEmpty) {
-          final initial = getInitialSampleData();
-          await saveItems(initial);
-          return initial;
+        if (decoded.isNotEmpty) {
+          allItems = decoded.map((item) => PurchaseItem.fromMap(item)).toList();
+        } else {
+          allItems = getInitialSampleData();
+          await saveItems(allItems);
         }
-        final items = decoded.map((item) => PurchaseItem.fromMap(item)).toList();
-        if (groupId != null) {
-          return items.where((i) => i.groupId == groupId).toList();
-        }
-        return items;
       } else {
-        final initial = getInitialSampleData();
-        await saveItems(initial);
-        return initial;
+        allItems = getInitialSampleData();
+        await saveItems(allItems);
       }
+
+      if (groupId != null) {
+        return allItems.where((i) => i.groupId == groupId).toList();
+      }
+      return allItems;
     } catch (_) {
-      return getInitialSampleData();
+      final initial = getInitialSampleData();
+      if (groupId != null) {
+        return initial.where((i) => i.groupId == groupId).toList();
+      }
+      return initial;
     }
   }
 
@@ -51,6 +57,16 @@ class PurchaseRepository implements IPurchaseRepository {
       final String encoded =
           jsonEncode(items.map((item) => item.toMap()).toList());
       await prefs.setString(_itemsStorageKey, encoded);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> saveItemsForGroup(String groupId, List<PurchaseItem> groupItems) async {
+    try {
+      final allItems = await getItems();
+      allItems.removeWhere((item) => item.groupId == groupId);
+      allItems.addAll(groupItems);
+      await saveItems(allItems);
     } catch (_) {}
   }
 

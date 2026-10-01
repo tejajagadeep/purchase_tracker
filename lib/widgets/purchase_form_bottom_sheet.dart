@@ -35,8 +35,7 @@ class _PurchaseFormBottomSheetState
   late TextEditingController _notesController;
 
   late String _selectedCategory;
-  late bool _isPurchased;
-  DateTime? _selectedDate;
+  late List<DateTime?> _unitDates;
 
   @override
   void initState() {
@@ -44,8 +43,9 @@ class _PurchaseFormBottomSheetState
     final item = widget.existingItem;
 
     _nameController = TextEditingController(text: item?.name ?? '');
+    final initialQty = item?.quantity ?? 1;
     _quantityController =
-        TextEditingController(text: (item?.quantity ?? 1).toString());
+        TextEditingController(text: initialQty.toString());
     _plannedPriceController = TextEditingController(
       text: item != null ? item.plannedPrice.toStringAsFixed(0) : '',
     );
@@ -63,9 +63,12 @@ class _PurchaseFormBottomSheetState
           widget.categories.isNotEmpty ? widget.categories.first : CategoryConstants.defaultCategories.first;
     }
 
-    _isPurchased = item?.isPurchased ?? false;
-    _selectedDate =
-        item?.datePurchased ?? (_isPurchased ? DateTime.now() : null);
+    _unitDates = List<DateTime?>.generate(initialQty, (index) {
+      if (item != null && index < item.purchaseDates.length) {
+        return item.purchaseDates[index];
+      }
+      return null;
+    });
   }
 
   @override
@@ -76,6 +79,19 @@ class _PurchaseFormBottomSheetState
     _actualPriceController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _onQuantityChanged(String value) {
+    final newQty = int.tryParse(value) ?? 1;
+    if (newQty > 0) {
+      setState(() {
+        if (newQty > _unitDates.length) {
+          _unitDates.addAll(List.generate(newQty - _unitDates.length, (_) => null));
+        } else if (newQty < _unitDates.length) {
+          _unitDates = _unitDates.sublist(0, newQty);
+        }
+      });
+    }
   }
 
   double get _calculatedTotal {
@@ -92,6 +108,8 @@ class _PurchaseFormBottomSheetState
       final actualPrice =
           actualPriceText.isNotEmpty ? double.tryParse(actualPriceText) : null;
 
+      final validDates = _unitDates.whereType<DateTime>().toList();
+
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
@@ -101,12 +119,10 @@ class _PurchaseFormBottomSheetState
         plannedPrice: plannedPrice,
         actualPrice: actualPrice,
         category: _selectedCategory,
-        isPurchased: _isPurchased,
+        purchaseDates: validDates,
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        datePurchased:
-            _isPurchased ? (_selectedDate ?? DateTime.now()) : null,
       );
 
       widget.onSave(newItem);
@@ -118,6 +134,7 @@ class _PurchaseFormBottomSheetState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isEditing = widget.existingItem != null;
+    final purchasedUnitCount = _unitDates.where((d) => d != null).length;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -201,7 +218,7 @@ class _PurchaseFormBottomSheetState
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.numbers),
                       ),
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _onQuantityChanged,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Required';
@@ -308,57 +325,155 @@ class _PurchaseFormBottomSheetState
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Purchased Switch
-              SwitchListTile(
-                title: const Text('Mark as Purchased'),
-                subtitle: Text(
-                  _isPurchased
-                      ? 'Item bought & added to actual spent'
-                      : 'Item is still pending',
-                ),
-                value: _isPurchased,
-                onChanged: (val) {
-                  setState(() {
-                    _isPurchased = val;
-                    if (_isPurchased && _selectedDate == null) {
-                      _selectedDate =
-                          widget.existingItem?.datePurchased ?? DateTime.now();
-                    }
-                  });
-                },
-              ),
-
-              // Clear Purchase Date Selector Field when Marked as Purchased
-              if (_isPurchased) ...[
-                const SizedBox(height: 8),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate ?? DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _selectedDate = picked;
-                      });
-                    }
+              // Purchase Dates per Unit Section
+              if (_unitDates.length == 1) ...[
+                // Single Quantity Toggle & Date Picker
+                SwitchListTile(
+                  title: const Text('Mark as Purchased'),
+                  subtitle: Text(
+                    _unitDates[0] != null
+                        ? 'Bought on ${formatDate(_unitDates[0]!)}'
+                        : 'Item is pending',
+                  ),
+                  value: _unitDates[0] != null,
+                  onChanged: (val) {
+                    setState(() {
+                      _unitDates[0] = val ? DateTime.now() : null;
+                    });
                   },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Purchase Date *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.calendar_today_outlined),
-                      suffixIcon: Icon(Icons.arrow_drop_down),
-                    ),
-                    child: Text(
-                      formatDate(_selectedDate ?? DateTime.now()),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                ),
+                if (_unitDates[0] != null) ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _unitDates[0] ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _unitDates[0] = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Purchase Date *',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.calendar_today_outlined),
+                        suffixIcon: Icon(Icons.arrow_drop_down),
                       ),
+                      child: Text(
+                        formatDate(_unitDates[0]!),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ] else ...[
+                // Multiple Quantity Unit Purchase Dates List
+                Card(
+                  elevation: 0,
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Unit Purchase Dates ($purchasedUnitCount of ${_unitDates.length} Bought)',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  final allBought = purchasedUnitCount == _unitDates.length;
+                                  _unitDates = List.generate(
+                                    _unitDates.length,
+                                    (_) => allBought ? null : DateTime.now(),
+                                  );
+                                });
+                              },
+                              child: Text(
+                                purchasedUnitCount == _unitDates.length
+                                    ? 'Clear All'
+                                    : 'Mark All Bought',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...List.generate(_unitDates.length, (index) {
+                          final isBought = _unitDates[index] != null;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  value: isBought,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _unitDates[index] =
+                                          val == true ? DateTime.now() : null;
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  'Unit ${index + 1}:',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: isBought
+                                      ? OutlinedButton.icon(
+                                          onPressed: () async {
+                                            final picked = await showDatePicker(
+                                              context: context,
+                                              initialDate:
+                                                  _unitDates[index] ?? DateTime.now(),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2100),
+                                            );
+                                            if (picked != null) {
+                                              setState(() {
+                                                _unitDates[index] = picked;
+                                              });
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.calendar_month,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            formatDate(_unitDates[index]!),
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Pending',
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                   ),
                 ),

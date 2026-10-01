@@ -7,6 +7,7 @@ import '../repositories/purchase_repository.dart';
 import '../widgets/purchase_form_bottom_sheet.dart';
 import '../widgets/purchase_item_tile.dart';
 import '../widgets/summary_card.dart';
+import 'backup_restore_screen.dart';
 import 'manage_categories_screen.dart';
 
 enum SortOption {
@@ -62,7 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final loadedCategories = await CategoryManager.loadCategories();
       final loadedGroups = await _repository.getGroups();
-      final activeGroup = loadedGroups.first;
+      final activeGroup = loadedGroups.firstWhere(
+        (g) => g.id == (_activeGroup?.id ?? loadedGroups.first.id),
+        orElse: () => loadedGroups.first,
+      );
       final loadedItems = await _repository.getItems(groupId: activeGroup.id);
 
       setState(() {
@@ -296,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () async {
+            onPressed: () {
               if (formKey.currentState!.validate()) {
                 final newName = controller.text.trim();
                 final updatedGroup = PurchaseGroup(
@@ -373,7 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _saveItems() async {
-    await _repository.saveItems(_items);
+    if (_activeGroup != null) {
+      await _repository.saveItemsForGroup(_activeGroup!.id, _items);
+    }
   }
 
   Future<void> _resetToDefaults() async {
@@ -439,6 +445,19 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             });
             _saveItems();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openBackupRestore() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BackupRestoreScreen(
+          onDataRestored: () {
+            _loadData();
           },
         ),
       ),
@@ -528,9 +547,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (updatedIndex != -1) {
       final isNowPurchased = !item.isPurchased;
       final updatedItem = item.copyWith(
-        isPurchased: isNowPurchased,
-        datePurchased:
-            isNowPurchased ? (item.datePurchased ?? DateTime.now()) : null,
+        purchaseDates: isNowPurchased
+            ? List.generate(item.quantity, (_) => DateTime.now())
+            : [],
       );
       setState(() {
         _items[updatedIndex] = updatedItem;
@@ -641,6 +660,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _resetToDefaults();
               } else if (value == 'manage_categories') {
                 _openManageCategories();
+              } else if (value == 'backup_restore') {
+                _openBackupRestore();
               } else if (value == 'switch_group') {
                 _openGroupSelector();
               } else if (value == 'clear_search') {
@@ -670,6 +691,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(Icons.category_outlined, size: 20),
                     SizedBox(width: 8),
                     Text('Manage Categories'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'backup_restore',
+                child: Row(
+                  children: [
+                    Icon(Icons.import_export, size: 20),
+                    SizedBox(width: 8),
+                    Text('Backup & Restore Data'),
                   ],
                 ),
               ),
