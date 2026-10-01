@@ -44,11 +44,13 @@ class PurchaseItem {
   double get plannedTotal => quantity * plannedPrice;
 
   double get actualTotal {
-    if (unitActualPrices.isNotEmpty) {
+    if (unitActualPrices.isNotEmpty && unitActualPrices.any((p) => p != null)) {
       double sum = 0.0;
       for (int i = 0; i < purchasedQuantity; i++) {
         if (i < unitActualPrices.length && unitActualPrices[i] != null) {
           sum += unitActualPrices[i]!;
+        } else if (actualPrice != null) {
+          sum += actualPrice!;
         } else {
           sum += plannedPrice;
         }

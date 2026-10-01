@@ -62,26 +62,19 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
     await _repository.saveItemsForGroup(_selectedTemplate!.id, _templateItems);
   }
 
-  void _showAddOrEditTemplateItemDialog({PurchaseItem? existingItem}) {
-    final nameController = TextEditingController(text: existingItem?.name ?? '');
-    final qtyController = TextEditingController(
-      text: (existingItem?.quantity ?? 1).toString(),
-    );
-    final priceController = TextEditingController(
-      text: existingItem != null ? existingItem.plannedPrice.toStringAsFixed(0) : '',
-    );
-    final notesController = TextEditingController(text: existingItem?.notes ?? '');
+  void _showAddTemplateItemDialog() {
+    final nameController = TextEditingController();
+    final qtyController = TextEditingController(text: '1');
+    final priceController = TextEditingController();
+    final notesController = TextEditingController();
 
-    String category = (existingItem != null && _categories.contains(existingItem.category))
-        ? existingItem.category
-        : _categories.first;
-
+    String category = _categories.first;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(existingItem == null ? 'Add Template Item' : 'Edit Template Item'),
+        title: const Text('Add Template Item'),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -183,7 +176,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                 final notesText = notesController.text.trim();
 
                 final newItem = PurchaseItem(
-                  id: existingItem?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+                  id: DateTime.now().microsecondsSinceEpoch.toString(),
                   groupId: _selectedTemplate!.id,
                   name: nameController.text.trim(),
                   quantity: qty,
@@ -193,19 +186,14 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                 );
 
                 setState(() {
-                  if (existingItem == null) {
-                    _templateItems.add(newItem);
-                  } else {
-                    final idx = _templateItems.indexWhere((i) => i.id == existingItem.id);
-                    if (idx != -1) _templateItems[idx] = newItem;
-                  }
+                  _templateItems.add(newItem);
                 });
 
                 _saveTemplateItems();
                 Navigator.pop(context);
               }
             },
-            child: const Text('Save'),
+            child: const Text('Add'),
           ),
         ],
       ),
@@ -214,13 +202,81 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
 
   void _deleteTemplateItem(PurchaseItem item) async {
     final messenger = ScaffoldMessenger.of(context);
-    setState(() {
-      _templateItems.removeWhere((i) => i.id == item.id);
-    });
-    await _saveTemplateItems();
-    messenger.showSnackBar(
-      SnackBar(content: Text('Removed "${item.name}" from template.')),
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete "${item.name}"?'),
+        content: Text('Are you sure you want to delete "${item.name}" from this template?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
+
+    if (confirm == true) {
+      setState(() {
+        _templateItems.removeWhere((i) => i.id == item.id);
+      });
+      await _saveTemplateItems();
+      messenger.showSnackBar(
+        SnackBar(content: Text('Deleted "${item.name}" from template.')),
+      );
+    }
+  }
+
+  void _deleteTemplateGroup() async {
+    if (_selectedTemplate == null) return;
+    if (_templateGroups.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('At least one master template must remain.')),
+      );
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    final groupToDelete = _selectedTemplate!;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Template "${groupToDelete.name}"?'),
+        content: const Text(
+          'Are you sure you want to delete this master template preset and all items inside it?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete Preset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _repository.deleteGroup(groupToDelete.id);
+      final groups = await _repository.getTemplateGroups();
+      setState(() {
+        _templateGroups = groups;
+        _selectedTemplate = groups.first;
+      });
+      await _selectTemplate(groups.first);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Deleted template preset "${groupToDelete.name}".')),
+      );
+    }
   }
 
   void _showAddTemplateGroupDialog() {
@@ -291,6 +347,11 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
         title: const Text('Manage Master Templates'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.delete_forever_outlined, color: Colors.red),
+            tooltip: 'Delete Master Template Preset',
+            onPressed: _deleteTemplateGroup,
+          ),
+          IconButton(
             icon: const Icon(Icons.add_box_outlined),
             tooltip: 'New Template Preset',
             onPressed: _showAddTemplateGroupDialog,
@@ -339,7 +400,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                         ),
                       ),
                       TextButton.icon(
-                        onPressed: () => _showAddOrEditTemplateItemDialog(),
+                        onPressed: _showAddTemplateItemDialog,
                         icon: const Icon(Icons.add, size: 18),
                         label: const Text('Add Item'),
                       ),
@@ -384,25 +445,14 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                                 subtitle: Text(
                                   'Qty: ${item.quantity} • ${formatCurrency(item.plannedPrice)} • ${item.category}',
                                 ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit_outlined, size: 20),
-                                      tooltip: 'Edit Item',
-                                      onPressed: () =>
-                                          _showAddOrEditTemplateItemDialog(existingItem: item),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.delete_outline,
-                                        size: 20,
-                                        color: theme.colorScheme.error,
-                                      ),
-                                      tooltip: 'Delete Item',
-                                      onPressed: () => _deleteTemplateItem(item),
-                                    ),
-                                  ],
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                    color: theme.colorScheme.error,
+                                  ),
+                                  tooltip: 'Delete Item',
+                                  onPressed: () => _deleteTemplateItem(item),
                                 ),
                               ),
                             );
@@ -412,7 +462,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddOrEditTemplateItemDialog(),
+        onPressed: _showAddTemplateItemDialog,
         icon: const Icon(Icons.add),
         label: const Text('Add Template Item'),
       ),
