@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'data/sample_data.dart';
+import 'models/purchase_item.dart';
+import 'utils/formatters.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const PurchaseTrackerApp());
@@ -46,33 +50,6 @@ class PurchaseTrackerApp extends StatelessWidget {
   }
 }
 
-/// Helper function to format currency according to Indian Rupees notation.
-String formatCurrency(double amount) {
-  final isNegative = amount < 0;
-  final absAmount = amount.abs();
-  final integerPart = absAmount.truncate().toString();
-
-  String result = '';
-  int len = integerPart.length;
-  if (len > 3) {
-    result = integerPart.substring(len - 3);
-    int pos = len - 3;
-    while (pos > 0) {
-      if (pos >= 2) {
-        result = '${integerPart.substring(pos - 2, pos)},$result';
-        pos -= 2;
-      } else {
-        result = '${integerPart.substring(0, pos)},$result';
-        pos = 0;
-      }
-    }
-  } else {
-    result = integerPart;
-  }
-
-  return '${isNegative ? '- ' : ''}₹$result';
-}
-
 enum SortOption {
   nameAsc,
   priceHighToLow,
@@ -84,93 +61,6 @@ enum StatusFilter {
   all,
   purchased,
   pending,
-}
-
-class PurchaseItem {
-  final String id;
-  final String name;
-  final int quantity;
-  final double plannedPrice;
-  final double? actualPrice;
-  final String category;
-  final bool isPurchased;
-  final String? notes;
-  final DateTime? datePurchased;
-
-  PurchaseItem({
-    required this.id,
-    required this.name,
-    this.quantity = 1,
-    required this.plannedPrice,
-    this.actualPrice,
-    required this.category,
-    this.isPurchased = false,
-    this.notes,
-    this.datePurchased,
-  });
-
-  double get plannedTotal => quantity * plannedPrice;
-
-  double get actualTotal =>
-      quantity * (actualPrice ?? plannedPrice);
-
-  double get effectiveTotal => isPurchased ? actualTotal : plannedTotal;
-
-  PurchaseItem copyWith({
-    String? id,
-    String? name,
-    int? quantity,
-    double? plannedPrice,
-    double? actualPrice,
-    String? category,
-    bool? isPurchased,
-    String? notes,
-    DateTime? datePurchased,
-  }) {
-    return PurchaseItem(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      quantity: quantity ?? this.quantity,
-      plannedPrice: plannedPrice ?? this.plannedPrice,
-      actualPrice: actualPrice ?? this.actualPrice,
-      category: category ?? this.category,
-      isPurchased: isPurchased ?? this.isPurchased,
-      notes: notes ?? this.notes,
-      datePurchased: datePurchased ?? this.datePurchased,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'quantity': quantity,
-      'plannedPrice': plannedPrice,
-      'actualPrice': actualPrice,
-      'category': category,
-      'isPurchased': isPurchased,
-      'notes': notes,
-      'datePurchased': datePurchased?.toIso8601String(),
-    };
-  }
-
-  factory PurchaseItem.fromMap(Map<String, dynamic> map) {
-    return PurchaseItem(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      quantity: map['quantity'] ?? 1,
-      plannedPrice: (map['plannedPrice'] as num).toDouble(),
-      actualPrice: map['actualPrice'] != null
-          ? (map['actualPrice'] as num).toDouble()
-          : null,
-      category: map['category'] ?? 'Other',
-      isPurchased: map['isPurchased'] ?? false,
-      notes: map['notes'],
-      datePurchased: map['datePurchased'] != null
-          ? DateTime.tryParse(map['datePurchased'])
-          : null,
-    );
-  }
 }
 
 class CategoryConstants {
@@ -206,118 +96,6 @@ class CategoryConstants {
         return Icons.shopping_bag;
     }
   }
-}
-
-/// Sample data populated on first launch based on touring accessories list
-List<PurchaseItem> getInitialSampleData() {
-  return [
-    PurchaseItem(
-      id: '1',
-      name: 'Riding jacket',
-      quantity: 1,
-      plannedPrice: 8000,
-      category: 'Riding Gear',
-    ),
-    PurchaseItem(
-      id: '2',
-      name: 'Shoes ×2',
-      quantity: 2,
-      plannedPrice: 5000,
-      category: 'Riding Gear',
-    ),
-    PurchaseItem(
-      id: '3',
-      name: 'Knee protector ×2',
-      quantity: 2,
-      plannedPrice: 3000,
-      category: 'Riding Gear',
-    ),
-    PurchaseItem(
-      id: '4',
-      name: 'Gloves',
-      quantity: 1,
-      plannedPrice: 2000,
-      category: 'Riding Gear',
-    ),
-    PurchaseItem(
-      id: '5',
-      name: 'Tent',
-      quantity: 1,
-      plannedPrice: 2500,
-      category: 'Camping',
-    ),
-    PurchaseItem(
-      id: '6',
-      name: 'Inflated Bed',
-      quantity: 1,
-      plannedPrice: 3000,
-      category: 'Camping',
-    ),
-    PurchaseItem(
-      id: '7',
-      name: 'Steel luggage',
-      quantity: 1,
-      plannedPrice: 23000,
-      category: 'Luggage',
-    ),
-    PurchaseItem(
-      id: '8',
-      name: 'Other luggage bags',
-      quantity: 1,
-      plannedPrice: 30000,
-      category: 'Luggage',
-    ),
-    PurchaseItem(
-      id: '9',
-      name: 'DJI camera',
-      quantity: 1,
-      plannedPrice: 58000,
-      category: 'Camera / Electronics',
-    ),
-    PurchaseItem(
-      id: '10',
-      name: 'EJEAS V6Pro+ Intercom',
-      quantity: 1,
-      plannedPrice: 6250,
-      notes: '₹6,000 + ₹250 fitting',
-      category: 'Camera / Electronics',
-    ),
-    PurchaseItem(
-      id: '11',
-      name: 'Fog lights',
-      quantity: 1,
-      plannedPrice: 20000,
-      category: 'Bike Accessories',
-    ),
-    PurchaseItem(
-      id: '12',
-      name: 'Tyre inflator',
-      quantity: 1,
-      plannedPrice: 3000,
-      category: 'Bike Tools',
-    ),
-    PurchaseItem(
-      id: '13',
-      name: 'Bike repair kit',
-      quantity: 1,
-      plannedPrice: 5000,
-      category: 'Bike Tools',
-    ),
-    PurchaseItem(
-      id: '14',
-      name: 'Helmet',
-      quantity: 1,
-      plannedPrice: 5300,
-      category: 'Safety',
-    ),
-    PurchaseItem(
-      id: '15',
-      name: 'Nylon 700x6x2',
-      quantity: 1,
-      plannedPrice: 8000,
-      category: 'Other',
-    ),
-  ];
 }
 
 class HomeScreen extends StatefulWidget {
@@ -360,10 +138,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonString);
-        setState(() {
-          _items = decoded.map((item) => PurchaseItem.fromMap(item)).toList();
-          _isLoading = false;
-        });
+        if (decoded.isEmpty) {
+          final initialItems = getInitialSampleData();
+          setState(() {
+            _items = initialItems;
+            _isLoading = false;
+          });
+          await _saveItems();
+        } else {
+          setState(() {
+            _items = decoded.map((item) => PurchaseItem.fromMap(item)).toList();
+            _isLoading = false;
+          });
+        }
       } else {
         // First run - populate initial touring accessories
         final initialItems = getInitialSampleData();
@@ -513,9 +300,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _togglePurchased(PurchaseItem item) {
     final updatedIndex = _items.indexWhere((element) => element.id == item.id);
     if (updatedIndex != -1) {
+      final isNowPurchased = !item.isPurchased;
       final updatedItem = item.copyWith(
-        isPurchased: !item.isPurchased,
-        datePurchased: !item.isPurchased ? DateTime.now() : null,
+        isPurchased: isNowPurchased,
+        datePurchased:
+            isNowPurchased ? (item.datePurchased ?? DateTime.now()) : null,
       );
       setState(() {
         _items[updatedIndex] = updatedItem;
@@ -1174,7 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Price & Status
+              // Price, Status & Purchase Date
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -1214,6 +1003,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  if (item.isPurchased) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      item.datePurchased != null
+                          ? formatDate(item.datePurchased!)
+                          : 'Purchased',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -1253,6 +1055,7 @@ class _PurchaseFormBottomSheetState
 
   late String _selectedCategory;
   late bool _isPurchased;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -1274,6 +1077,8 @@ class _PurchaseFormBottomSheetState
 
     _selectedCategory = item?.category ?? CategoryConstants.categories.first;
     _isPurchased = item?.isPurchased ?? false;
+    _selectedDate =
+        item?.datePurchased ?? (_isPurchased ? DateTime.now() : null);
   }
 
   @override
@@ -1312,9 +1117,8 @@ class _PurchaseFormBottomSheetState
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        datePurchased: _isPurchased
-            ? (widget.existingItem?.datePurchased ?? DateTime.now())
-            : null,
+        datePurchased:
+            _isPurchased ? (_selectedDate ?? DateTime.now()) : null,
       );
 
       widget.onSave(newItem);
@@ -1530,9 +1334,47 @@ class _PurchaseFormBottomSheetState
                 onChanged: (val) {
                   setState(() {
                     _isPurchased = val;
+                    if (_isPurchased && _selectedDate == null) {
+                      _selectedDate =
+                          widget.existingItem?.datePurchased ?? DateTime.now();
+                    }
                   });
                 },
               ),
+
+              // Clear Purchase Date Selector Field when Marked as Purchased
+              if (_isPurchased) ...[
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDate = picked;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Purchase Date *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.calendar_today_outlined),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    child: Text(
+                      formatDate(_selectedDate ?? DateTime.now()),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 12),
 
