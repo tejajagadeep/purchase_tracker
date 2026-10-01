@@ -3,6 +3,7 @@ class SubGroup {
   final String groupId;
   final String name;
   final double? targetBudget;
+  final bool isPinned;
   final DateTime createdAt;
 
   SubGroup({
@@ -10,6 +11,7 @@ class SubGroup {
     required this.groupId,
     required this.name,
     this.targetBudget,
+    this.isPinned = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -18,6 +20,7 @@ class SubGroup {
     String? groupId,
     String? name,
     double? targetBudget,
+    bool? isPinned,
     DateTime? createdAt,
   }) {
     return SubGroup(
@@ -25,6 +28,7 @@ class SubGroup {
       groupId: groupId ?? this.groupId,
       name: name ?? this.name,
       targetBudget: targetBudget ?? this.targetBudget,
+      isPinned: isPinned ?? this.isPinned,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -35,6 +39,7 @@ class SubGroup {
       'groupId': groupId,
       'name': name,
       'targetBudget': targetBudget,
+      'isPinned': isPinned,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -47,6 +52,7 @@ class SubGroup {
       targetBudget: map['targetBudget'] != null
           ? (map['targetBudget'] as num).toDouble()
           : null,
+      isPinned: map['isPinned'] ?? false,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : DateTime.now(),

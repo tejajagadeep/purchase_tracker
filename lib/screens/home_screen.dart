@@ -84,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _groups = loadedGroups;
         _activeGroup = activeGroup;
         _subGroups = loadedSubGroups;
+        _sortSubGroups();
         _activeSubGroup = null;
         _items = loadedItems;
         _isLoading = false;
@@ -105,10 +106,53 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _activeGroup = group;
       _subGroups = subGroups;
+      _sortSubGroups();
       _activeSubGroup = null;
       _items = items;
       _isLoading = false;
     });
+  }
+
+  void _sortSubGroups() {
+    _subGroups.sort((a, b) {
+      if (a.isPinned == b.isPinned) {
+        return a.createdAt.compareTo(b.createdAt);
+      }
+      return a.isPinned ? -1 : 1;
+    });
+  }
+
+  void _togglePinSubGroup(SubGroup subGroup) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final updatedSubGroup = subGroup.copyWith(isPinned: !subGroup.isPinned);
+
+    final idx = _subGroups.indexWhere((sg) => sg.id == subGroup.id);
+    if (idx != -1) {
+      setState(() {
+        _subGroups[idx] = updatedSubGroup;
+        if (_activeSubGroup?.id == subGroup.id) {
+          _activeSubGroup = updatedSubGroup;
+        }
+        _sortSubGroups();
+      });
+
+      final allSubs = await _repository.getSubGroups();
+      final allIdx = allSubs.indexWhere((sg) => sg.id == subGroup.id);
+      if (allIdx != -1) {
+        allSubs[allIdx] = updatedSubGroup;
+        await _repository.saveSubGroups(allSubs);
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            updatedSubGroup.isPinned
+                ? 'Pinned "${subGroup.name}" to top!'
+                : 'Unpinned "${subGroup.name}"',
+          ),
+        ),
+      );
+    }
   }
 
   void _togglePinGroup(PurchaseGroup group) async {
@@ -523,6 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
                 setState(() {
                   _subGroups.add(newSubGroup);
+                  _sortSubGroups();
                   _activeSubGroup = newSubGroup;
                 });
                 _repository.getSubGroups().then((allSubGroups) {
@@ -544,83 +589,104 @@ class _HomeScreenState extends State<HomeScreen> {
     final budgetController = TextEditingController(
       text: subGroup.targetBudget != null ? subGroup.targetBudget!.toStringAsFixed(0) : '',
     );
+    bool isPinned = subGroup.isPinned;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit "${subGroup.name}"'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Sub-Group Name *',
-                  border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Edit "${subGroup.name}"'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Sub-Group Name *',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter name';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter name';
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: budgetController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Target Sub-Group Budget (₹) (Optional)',
+                    hintText: 'e.g. 50000',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.currency_rupee),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Pin Sub-Group to Top'),
+                  subtitle: const Text('Keep this sub-group at the top of the list'),
+                  value: isPinned,
+                  secondary: Icon(
+                    isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    color: isPinned ? Colors.orange : null,
+                  ),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      isPinned = val;
+                    });
+                  },
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final budgetText = budgetController.text.trim();
+                  final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+
+                  final updatedSubGroup = subGroup.copyWith(
+                    name: nameController.text.trim(),
+                    targetBudget: budget,
+                    isPinned: isPinned,
+                  );
+
+                  final idx = _subGroups.indexWhere((sg) => sg.id == subGroup.id);
+                  if (idx != -1) {
+                    setState(() {
+                      _subGroups[idx] = updatedSubGroup;
+                      if (_activeSubGroup?.id == subGroup.id) {
+                        _activeSubGroup = updatedSubGroup;
+                      }
+                      _sortSubGroups();
+                    });
+                    _repository.getSubGroups().then((allSubs) {
+                      final allIdx = allSubs.indexWhere((sg) => sg.id == subGroup.id);
+                      if (allIdx != -1) {
+                        allSubs[allIdx] = updatedSubGroup;
+                        _repository.saveSubGroups(allSubs);
+                      }
+                    });
                   }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: budgetController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Target Sub-Group Budget (₹) (Optional)',
-                  hintText: 'e.g. 50000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final budgetText = budgetController.text.trim();
-                final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
-
-                final updatedSubGroup = subGroup.copyWith(
-                  name: nameController.text.trim(),
-                  targetBudget: budget,
-                );
-
-                final idx = _subGroups.indexWhere((sg) => sg.id == subGroup.id);
-                if (idx != -1) {
-                  setState(() {
-                    _subGroups[idx] = updatedSubGroup;
-                    if (_activeSubGroup?.id == subGroup.id) {
-                      _activeSubGroup = updatedSubGroup;
-                    }
-                  });
-                  _repository.getSubGroups().then((allSubs) {
-                    final allIdx = allSubs.indexWhere((sg) => sg.id == subGroup.id);
-                    if (allIdx != -1) {
-                      allSubs[allIdx] = updatedSubGroup;
-                      _repository.saveSubGroups(allSubs);
-                    }
-                  });
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1563,9 +1629,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                           vertical: 0,
                                         ),
                                         label: Center(
-                                          child: Text(
-                                            sg.name,
-                                            textAlign: TextAlign.center,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (sg.isPinned) ...[
+                                                const Icon(
+                                                  Icons.push_pin,
+                                                  size: 12,
+                                                  color: Colors.orange,
+                                                ),
+                                                const SizedBox(width: 4),
+                                              ],
+                                              Text(
+                                                sg.name,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                         selected: isSelected,
@@ -1801,6 +1880,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   _activeSubGroup = sg;
                                 });
                               },
+                              onPinSubGroup: () => _togglePinSubGroup(sg),
                               onEditSubGroup: () => _showEditSubGroupDialog(sg),
                             );
                           },

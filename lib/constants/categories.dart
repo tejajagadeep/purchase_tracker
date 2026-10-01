@@ -102,10 +102,6 @@ class CategoryConstants {
   }
 
   static IconData getIcon(String category) {
-    if (_customIconsMap.containsKey(category)) {
-      // ignore: non_const_argument_for_const_parameter
-      return IconData(_customIconsMap[category]!, fontFamily: 'MaterialIcons');
-    }
     if (predefinedIcons.containsKey(category)) {
       return predefinedIcons[category]!;
     }

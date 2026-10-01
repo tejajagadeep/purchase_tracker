@@ -8,6 +8,7 @@ class SubGroupCard extends StatelessWidget {
   final List<PurchaseItem> items;
   final VoidCallback onTap;
   final VoidCallback? onEditSubGroup;
+  final VoidCallback? onPinSubGroup;
 
   const SubGroupCard({
     super.key,
@@ -15,6 +16,7 @@ class SubGroupCard extends StatelessWidget {
     required this.items,
     required this.onTap,
     this.onEditSubGroup,
+    this.onPinSubGroup,
   });
 
   @override
@@ -59,11 +61,23 @@ class SubGroupCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            subGroup.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              if (subGroup.isPinned) ...[
+                                const Icon(
+                                  Icons.push_pin,
+                                  size: 14,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              Text(
+                                subGroup.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                           if (subGroup.targetBudget != null)
                             Text(
@@ -94,8 +108,24 @@ class SubGroupCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (onPinSubGroup != null) ...[
+                        const SizedBox(width: 2),
+                        IconButton(
+                          icon: Icon(
+                            subGroup.isPinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined,
+                            size: 18,
+                            color: subGroup.isPinned ? Colors.orange : null,
+                          ),
+                          tooltip: subGroup.isPinned
+                              ? 'Unpin Sub-Group'
+                              : 'Pin Sub-Group to Top',
+                          onPressed: onPinSubGroup,
+                        ),
+                      ],
                       if (onEditSubGroup != null) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 2),
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 18),
                           tooltip: 'Edit Sub-Group',

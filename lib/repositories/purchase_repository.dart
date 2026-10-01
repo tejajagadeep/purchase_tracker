@@ -193,10 +193,16 @@ class PurchaseRepository implements IPurchaseRepository {
         allSubGroups = decoded.map((sg) => SubGroup.fromMap(sg)).toList();
       }
 
-      if (groupId != null) {
-        return allSubGroups.where((sg) => sg.groupId == groupId).toList();
-      }
-      return allSubGroups;
+      List<SubGroup> result = groupId != null
+          ? allSubGroups.where((sg) => sg.groupId == groupId).toList()
+          : allSubGroups;
+      result.sort((a, b) {
+        if (a.isPinned == b.isPinned) {
+          return a.createdAt.compareTo(b.createdAt);
+        }
+        return a.isPinned ? -1 : 1;
+      });
+      return result;
     } catch (_) {
       return [];
     }
