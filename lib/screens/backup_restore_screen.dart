@@ -18,27 +18,48 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   final BackupService _backupService = BackupService();
   bool _isProcessing = false;
 
-  Future<void> _exportBackup() async {
+  Future<void> _saveToLocalStorage() async {
+    final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _isProcessing = true;
     });
 
-    final success = await _backupService.exportBackup();
+    final savedPath = await _backupService.saveBackupToLocalFile();
 
     setState(() {
       _isProcessing = false;
     });
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup exported successfully!')),
-        );
-      }
+    if (savedPath != null && savedPath.isNotEmpty) {
+      messenger.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 5),
+          content: Text('Saved to: $savedPath'),
+        ),
+      );
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save file to local storage.'),
+        ),
+      );
     }
   }
 
+  Future<void> _exportBackup() async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    await _backupService.exportBackup();
+
+    setState(() {
+      _isProcessing = false;
+    });
+  }
+
   Future<void> _copyJsonToClipboard() async {
+    final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _isProcessing = true;
     });
@@ -50,11 +71,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _isProcessing = false;
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Backup JSON copied to clipboard!')),
-      );
-    }
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Backup JSON copied to clipboard!')),
+    );
   }
 
   Future<void> _importFromFile({required bool merge}) async {
@@ -208,19 +227,28 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Export all your purchases, groups, and categories as a JSON backup file. You can save it to Drive, files, or share it.',
+                          'Export all your purchases, groups, and categories as a JSON backup file to local storage, share sheet, or clipboard.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.outline,
                           ),
                         ),
                         const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _saveToLocalStorage,
+                            icon: const Icon(Icons.download_for_offline_outlined),
+                            label: const Text('Save to Local Device Storage'),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
-                              child: FilledButton.icon(
+                              child: OutlinedButton.icon(
                                 onPressed: _exportBackup,
                                 icon: const Icon(Icons.share),
-                                label: const Text('Export JSON File'),
+                                label: const Text('Share File'),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -265,7 +293,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Select a previously exported JSON file to restore your purchases, groups, and categories anytime.',
+                          'Select a previously saved JSON file from local storage to restore your purchases, groups, and categories anytime.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.outline,
                           ),

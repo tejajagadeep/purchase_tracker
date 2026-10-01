@@ -1,0 +1,206 @@
+{
+  "app": "Purchase Tracker",
+  "version": 1,
+  "exportedAt": "2026-10-15T12:00:00.000Z",
+  "groups": [
+    {
+      "id": "bike_touring",
+      "name": "Bike Touring Accessories",
+      "description": "Touring accessories and gear purchases",
+      "iconName": "two_wheeler",
+      "createdAt": "2026-10-15T10:00:00.000Z"
+    }
+  ],
+  "categories": [
+    "Riding Gear",
+    "Camping",
+    "Camera / Electronics",
+    "Luggage",
+    "Bike Tools",
+    "Bike Accessories",
+    "Safety",
+    "Other"
+  ],
+  "items": [
+    {
+      "id": "1",
+      "groupId": "bike_touring",
+      "name": "Riding jacket",
+      "quantity": 1,
+      "plannedPrice": 8000.0,
+      "actualPrice": null,
+      "category": "Riding Gear",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "2",
+      "groupId": "bike_touring",
+      "name": "Shoes ×2",
+      "quantity": 2,
+      "plannedPrice": 5000.0,
+      "actualPrice": null,
+      "category": "Riding Gear",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "3",
+      "groupId": "bike_touring",
+      "name": "Knee protector ×2",
+      "quantity": 2,
+      "plannedPrice": 3000.0,
+      "actualPrice": null,
+      "category": "Riding Gear",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "4",
+      "groupId": "bike_touring",
+      "name": "Gloves",
+      "quantity": 1,
+      "plannedPrice": 2000.0,
+      "actualPrice": null,
+      "category": "Riding Gear",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "5",
+      "groupId": "bike_touring",
+      "name": "Tent",
+      "quantity": 1,
+      "plannedPrice": 2500.0,
+      "actualPrice": null,
+      "category": "Camping",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "6",
+      "groupId": "bike_touring",
+      "name": "Inflated Bed",
+      "quantity": 1,
+      "plannedPrice": 3000.0,
+      "actualPrice": null,
+      "category": "Camping",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "7",
+      "groupId": "bike_touring",
+      "name": "Steel luggage",
+      "quantity": 1,
+      "plannedPrice": 23000.0,
+      "actualPrice": null,
+      "category": "Luggage",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "8",
+      "groupId": "bike_touring",
+      "name": "Other luggage bags",
+      "quantity": 1,
+      "plannedPrice": 30000.0,
+      "actualPrice": null,
+      "category": "Luggage",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "9",
+      "groupId": "bike_touring",
+      "name": "DJI camera",
+      "quantity": 1,
+      "plannedPrice": 58000.0,
+      "actualPrice": null,
+      "category": "Camera / Electronics",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "10",
+      "groupId": "bike_touring",
+      "name": "EJEAS V6Pro+ Intercom",
+      "quantity": 1,
+      "plannedPrice": 6250.0,
+      "actualPrice": null,
+      "category": "Camera / Electronics",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": "₹6,000 + ₹250 fitting"
+    },
+    {
+      "id": "11",
+      "groupId": "bike_touring",
+      "name": "Fog lights",
+      "quantity": 1,
+      "plannedPrice": 20000.0,
+      "actualPrice": null,
+      "category": "Bike Accessories",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "12",
+      "groupId": "bike_touring",
+      "name": "Tyre inflator",
+      "quantity": 1,
+      "plannedPrice": 3000.0,
+      "actualPrice": null,
+      "category": "Bike Tools",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "13",
+      "groupId": "bike_touring",
+      "name": "Bike repair kit",
+      "quantity": 1,
+      "plannedPrice": 5000.0,
+      "actualPrice": null,
+      "category": "Bike Tools",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "14",
+      "groupId": "bike_touring",
+      "name": "Helmet",
+      "quantity": 1,
+      "plannedPrice": 5300.0,
+      "actualPrice": null,
+      "category": "Safety",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    },
+    {
+      "id": "15",
+      "groupId": "bike_touring",
+      "name": "Nylon 700x6x2",
+      "quantity": 1,
+      "plannedPrice": 8000.0,
+      "actualPrice": null,
+      "category": "Other",
+      "purchaseDates": [],
+      "isPurchased": false,
+      "notes": null
+    }
+  ]
+}

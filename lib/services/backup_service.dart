@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../constants/categories.dart';
 import '../models/purchase_group.dart';
@@ -47,6 +49,51 @@ class BackupService {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<String?> saveBackupToLocalFile() async {
+    try {
+      final jsonString = await createBackupJson();
+      final fileName = 'Purchase_Tracker_Backup_${DateTime.now().millisecondsSinceEpoch}.json';
+
+      // 1. Try FilePicker saveFile dialog
+      try {
+        final bytes = Uint8List.fromList(utf8.encode(jsonString));
+        final savedPath = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Backup File',
+          fileName: fileName,
+          type: FileType.custom,
+          allowedExtensions: ['json'],
+          bytes: bytes,
+        );
+        if (savedPath != null && savedPath.isNotEmpty) {
+          return savedPath;
+        }
+      } catch (_) {}
+
+      // 2. Direct save to Android Public Downloads folder: /storage/emulated/0/Download
+      if (Platform.isAndroid) {
+        final downloadDir = Directory('/storage/emulated/0/Download');
+        if (await downloadDir.exists()) {
+          final file = File('${downloadDir.path}/$fileName');
+          await file.writeAsString(jsonString);
+          return file.path;
+        }
+      }
+
+      // 3. Fallback to path_provider getDownloadsDirectory / getApplicationDocumentsDirectory
+      Directory? dir;
+      try {
+        dir = await getDownloadsDirectory();
+      } catch (_) {}
+      dir ??= await getApplicationDocumentsDirectory();
+
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsString(jsonString);
+      return file.path;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -124,7 +171,11 @@ class BackupService {
 
         if (file.bytes != null) {
           jsonString = utf8.decode(file.bytes!);
+        } else if (file.path != null) {
+          final f = File(file.path!);
+          jsonString = await f.readAsString();
         }
+
         if (jsonString.isNotEmpty) {
           return await restoreFromRawJson(jsonString, merge: merge);
         }
