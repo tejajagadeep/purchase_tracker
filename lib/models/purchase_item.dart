@@ -1,5 +1,6 @@
 class PurchaseItem {
   final String id;
+  final String groupId;
   final String name;
   final int quantity;
   final double plannedPrice;
@@ -11,6 +12,7 @@ class PurchaseItem {
 
   PurchaseItem({
     required this.id,
+    this.groupId = 'bike_touring',
     required this.name,
     this.quantity = 1,
     required this.plannedPrice,
@@ -30,6 +32,7 @@ class PurchaseItem {
 
   PurchaseItem copyWith({
     String? id,
+    String? groupId,
     String? name,
     int? quantity,
     double? plannedPrice,
@@ -41,6 +44,7 @@ class PurchaseItem {
   }) {
     return PurchaseItem(
       id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       plannedPrice: plannedPrice ?? this.plannedPrice,
@@ -55,6 +59,7 @@ class PurchaseItem {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'groupId': groupId,
       'name': name,
       'quantity': quantity,
       'plannedPrice': plannedPrice,
@@ -69,6 +74,7 @@ class PurchaseItem {
   factory PurchaseItem.fromMap(Map<String, dynamic> map) {
     return PurchaseItem(
       id: map['id'] ?? '',
+      groupId: map['groupId'] ?? 'bike_touring',
       name: map['name'] ?? '',
       quantity: map['quantity'] ?? 1,
       plannedPrice: (map['plannedPrice'] as num).toDouble(),
