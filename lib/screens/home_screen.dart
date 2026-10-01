@@ -7,6 +7,7 @@ import '../models/sub_group.dart';
 import '../repositories/purchase_repository.dart';
 import '../widgets/purchase_form_bottom_sheet.dart';
 import '../widgets/purchase_item_tile.dart';
+import '../widgets/sub_group_card.dart';
 import '../widgets/summary_card.dart';
 import 'backup_restore_screen.dart';
 import 'calendar_expense_screen.dart';
@@ -461,7 +462,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddSubGroupDialog() {
-    final controller = TextEditingController();
+    final nameController = TextEditingController();
+    final budgetController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -470,20 +472,36 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Add Month / Sub-Group'),
         content: Form(
           key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Sub-Group / Month Name',
-              hintText: 'e.g. October 2026, November 2026',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter name';
-              }
-              return null;
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Sub-Group / Month Name *',
+                  hintText: 'e.g. October 2026, November 2026',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: budgetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Target Sub-Group Budget (₹) (Optional)',
+                  hintText: 'e.g. 50000',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.currency_rupee),
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -494,10 +512,14 @@ class _HomeScreenState extends State<HomeScreen> {
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate() && _activeGroup != null) {
+                final budgetText = budgetController.text.trim();
+                final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+
                 final newSubGroup = SubGroup(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   groupId: _activeGroup!.id,
-                  name: controller.text.trim(),
+                  name: nameController.text.trim(),
+                  targetBudget: budget,
                 );
                 setState(() {
                   _subGroups.add(newSubGroup);
@@ -511,6 +533,92 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditSubGroupDialog(SubGroup subGroup) {
+    final nameController = TextEditingController(text: subGroup.name);
+    final budgetController = TextEditingController(
+      text: subGroup.targetBudget != null ? subGroup.targetBudget!.toStringAsFixed(0) : '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit "${subGroup.name}"'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Sub-Group Name *',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: budgetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Target Sub-Group Budget (₹) (Optional)',
+                  hintText: 'e.g. 50000',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.currency_rupee),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final budgetText = budgetController.text.trim();
+                final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+
+                final updatedSubGroup = subGroup.copyWith(
+                  name: nameController.text.trim(),
+                  targetBudget: budget,
+                );
+
+                final idx = _subGroups.indexWhere((sg) => sg.id == subGroup.id);
+                if (idx != -1) {
+                  setState(() {
+                    _subGroups[idx] = updatedSubGroup;
+                    if (_activeSubGroup?.id == subGroup.id) {
+                      _activeSubGroup = updatedSubGroup;
+                    }
+                  });
+                  _repository.getSubGroups().then((allSubs) {
+                    final allIdx = allSubs.indexWhere((sg) => sg.id == subGroup.id);
+                    if (allIdx != -1) {
+                      allSubs[allIdx] = updatedSubGroup;
+                      _repository.saveSubGroups(allSubs);
+                    }
+                  });
+                }
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -823,6 +931,7 @@ class _HomeScreenState extends State<HomeScreen> {
       id: sourceGroup.id,
       groupId: targetGroupId,
       name: sourceGroup.name,
+      targetBudget: sourceGroup.targetBudget,
     );
 
     final allSubGroups = await _repository.getSubGroups();
@@ -1024,7 +1133,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   double get effectiveGroupBudget {
-    return _activeGroup?.targetBudget ?? itemsPlannedTotal;
+    if (_activeSubGroup != null) {
+      return _activeSubGroup!.targetBudget ?? itemsPlannedTotal;
+    }
+    // Main Group View
+    if (_activeGroup?.targetBudget != null) {
+      return _activeGroup!.targetBudget!;
+    }
+    if (_subGroups.isNotEmpty) {
+      double sumSubBudgets = 0.0;
+      for (final sg in _subGroups) {
+        final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
+        final sgPlanned = sgItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
+        sumSubBudgets += sg.targetBudget ?? sgPlanned;
+      }
+      return sumSubBudgets;
+    }
+    return itemsPlannedTotal;
   }
 
   double get totalActualSpent {
@@ -1213,6 +1338,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final displayedItems = _filteredAndSortedItems;
+    final bool showSubGroupCardsView =
+        _subGroups.isNotEmpty && _activeSubGroup == null;
 
     return Scaffold(
       appBar: AppBar(
@@ -1387,76 +1514,112 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: _loadData,
               child: CustomScrollView(
                 slivers: [
-                  // Sub-Groups / Months Horizontal Bar
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 36,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: _subGroups.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    final isSelected = _activeSubGroup == null;
+                  // Sub-Groups / Months Horizontal Choice Bar
+                  if (_subGroups.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 36,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _subGroups.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      final isSelected = _activeSubGroup == null;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8.0),
+                                        child: ChoiceChip(
+                                          labelPadding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 0,
+                                          ),
+                                          label: const Center(
+                                            child: Text(
+                                              'All Months/Groups',
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          selected: isSelected,
+                                          onSelected: (_) {
+                                            setState(() {
+                                              _activeSubGroup = null;
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    }
+
+                                    final sg = _subGroups[index - 1];
+                                    final isSelected = _activeSubGroup?.id == sg.id;
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 8.0),
                                       child: ChoiceChip(
-                                        label: const Text('All Months/Items'),
+                                        labelPadding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 0,
+                                        ),
+                                        label: Center(
+                                          child: Text(
+                                            sg.name,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
                                         selected: isSelected,
                                         onSelected: (_) {
                                           setState(() {
-                                            _activeSubGroup = null;
+                                            _activeSubGroup = sg;
                                           });
                                         },
                                       ),
                                     );
-                                  }
-
-                                  final sg = _subGroups[index - 1];
-                                  final isSelected = _activeSubGroup?.id == sg.id;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      label: Text(sg.name),
-                                      selected: isSelected,
-                                      onSelected: (_) {
-                                        setState(() {
-                                          _activeSubGroup = sg;
-                                        });
-                                      },
-                                    ),
-                                  );
-                                },
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy_outlined, size: 20),
-                            tooltip: 'Copy Template into Sub-Group',
-                            onPressed: () => _showCopyFromTemplateDialog(
-                              preSelectedSubGroupId: _activeSubGroup?.id,
+                            IconButton(
+                              icon: const Icon(Icons.copy_outlined, size: 20),
+                              tooltip: 'Copy Template into Sub-Group',
+                              onPressed: () => _showCopyFromTemplateDialog(
+                                preSelectedSubGroupId: _activeSubGroup?.id,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline, size: 22),
-                            tooltip: 'Add Sub-Group / Month',
-                            onPressed: _showAddSubGroupDialog,
-                          ),
-                        ],
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline, size: 22),
+                              tooltip: 'Add Sub-Group / Month',
+                              onPressed: _showAddSubGroupDialog,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16.0, top: 4.0),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: _showAddSubGroupDialog,
+                            icon: const Icon(Icons.add_circle_outline, size: 18),
+                            label: const Text('Add Sub-Group / Month'),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
 
                   // Dashboard Summary Card
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: SummaryCard(
-                        groupTargetBudget: _activeGroup?.targetBudget,
+                        groupTargetBudget: _activeSubGroup != null
+                            ? _activeSubGroup!.targetBudget
+                            : _activeGroup?.targetBudget,
                         itemsPlannedTotal: itemsPlannedTotal,
                         totalActualSpent: totalActualSpent,
                         remainingBudget: remainingBudget,
@@ -1466,7 +1629,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: _activeSubGroup != null
                             ? '${_activeGroup?.name ?? 'PURCHASES'} • ${_activeSubGroup!.name}'
                             : (_activeGroup?.name ?? 'PURCHASE TRACKER'),
-                        onEditBudget: _showEditGroupBudgetDialog,
+                        onEditBudget: _activeSubGroup != null
+                            ? () => _showEditSubGroupDialog(_activeSubGroup!)
+                            : _showEditGroupBudgetDialog,
                       ),
                     ),
                   ),
@@ -1587,7 +1752,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // List Header
+                  // Header Section
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -1598,13 +1763,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Your Purchases (${displayedItems.length})',
+                            showSubGroupCardsView
+                                ? 'Sub-Groups / Months (${_subGroups.length})'
+                                : 'Your Purchases (${displayedItems.length})',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            'Tap item to edit',
+                            showSubGroupCardsView
+                                ? 'Tap to open sub-group'
+                                : 'Tap item to edit',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.outline,
                             ),
@@ -1614,57 +1783,120 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // Items List or Empty View
-                  displayedItems.isEmpty
-                      ? SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.shopping_bag_outlined,
-                                  size: 64,
-                                  color: theme.colorScheme.outline,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No purchases found',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: theme.colorScheme.outline,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tap + to add a new purchase or clear filters',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.outline,
-                                  ),
-                                ),
-                              ],
+                  // SUB-GROUP CARDS VIEW OR ITEMS LIST VIEW
+                  if (showSubGroupCardsView) ...[
+                    // Display SubGroup Cards
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final sg = _subGroups[index];
+                            final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
+                            return SubGroupCard(
+                              subGroup: sg,
+                              items: sgItems,
+                              onTap: () {
+                                setState(() {
+                                  _activeSubGroup = sg;
+                                });
+                              },
+                              onEditSubGroup: () => _showEditSubGroupDialog(sg),
+                            );
+                          },
+                          childCount: _subGroups.length,
+                        ),
+                      ),
+                    ),
+
+                    // Unassigned Main Items Section (if any exist without subgroup)
+                    if (_items.any((i) => i.subGroupId == null)) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Text(
+                            'Main Unassigned Purchases',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        )
-                      : SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final item = displayedItems[index];
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 4.0,
-                                ),
-                                child: PurchaseItemTile(
-                                  item: item,
-                                  onTap: () => _addOrEditItem(existingItem: item),
-                                  onTogglePurchased: () => _togglePurchased(item),
-                                  onAddUnitBought: () => _addUnitBoughtToday(item),
-                                ),
-                              );
-                            },
-                            childCount: displayedItems.length,
-                          ),
                         ),
+                      ),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final unassignedItems = _items.where((i) => i.subGroupId == null).toList();
+                            final item = unassignedItems[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 4.0,
+                              ),
+                              child: PurchaseItemTile(
+                                item: item,
+                                onTap: () => _addOrEditItem(existingItem: item),
+                                onTogglePurchased: () => _togglePurchased(item),
+                                onAddUnitBought: () => _addUnitBoughtToday(item),
+                              ),
+                            );
+                          },
+                          childCount: _items.where((i) => i.subGroupId == null).length,
+                        ),
+                      ),
+                    ],
+                  ] else ...[
+                    // Display Items List
+                    displayedItems.isEmpty
+                        ? SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.shopping_bag_outlined,
+                                    size: 64,
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No purchases found',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      color: theme.colorScheme.outline,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap + to add a new purchase or clear filters',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.outline,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final item = displayedItems[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 4.0,
+                                  ),
+                                  child: PurchaseItemTile(
+                                    item: item,
+                                    onTap: () => _addOrEditItem(existingItem: item),
+                                    onTogglePurchased: () => _togglePurchased(item),
+                                    onAddUnitBought: () => _addUnitBoughtToday(item),
+                                  ),
+                                );
+                              },
+                              childCount: displayedItems.length,
+                            ),
+                          ),
+                  ],
 
                   const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
                 ],
