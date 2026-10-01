@@ -1409,6 +1409,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -1427,12 +1428,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: _openGroupSelector,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Flexible(
                       child: Text(
                         _activeGroup?.name ?? 'Purchase Tracker',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                     const Icon(Icons.arrow_drop_down),
@@ -1589,7 +1593,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Expanded(
                               child: SizedBox(
-                                height: 36,
+                                height: 42,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: _subGroups.length + 1,
@@ -1599,15 +1603,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                       return Padding(
                                         padding: const EdgeInsets.only(right: 8.0),
                                         child: ChoiceChip(
+                                          showCheckmark: false,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
                                           labelPadding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
+                                            horizontal: 12,
                                             vertical: 0,
                                           ),
-                                          label: const Center(
-                                            child: Text(
-                                              'All Months/Groups',
-                                              textAlign: TextAlign.center,
-                                            ),
+                                          label: const Text(
+                                            'All Months/Groups',
+                                            textAlign: TextAlign.center,
                                           ),
                                           selected: isSelected,
                                           onSelected: (_) {
@@ -1624,28 +1629,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 8.0),
                                       child: ChoiceChip(
+                                        showCheckmark: false,
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
                                         labelPadding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
+                                          horizontal: 12,
                                           vertical: 0,
                                         ),
-                                        label: Center(
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (sg.isPinned) ...[
-                                                const Icon(
-                                                  Icons.push_pin,
-                                                  size: 12,
-                                                  color: Colors.orange,
-                                                ),
-                                                const SizedBox(width: 4),
-                                              ],
-                                              Text(
-                                                sg.name,
-                                                textAlign: TextAlign.center,
+                                        label: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (sg.isPinned) ...[
+                                              const Icon(
+                                                Icons.push_pin,
+                                                size: 14,
+                                                color: Colors.orange,
                                               ),
+                                              const SizedBox(width: 4),
                                             ],
-                                          ),
+                                            Text(
+                                              sg.name,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
                                         ),
                                         selected: isSelected,
                                         onSelected: (_) {
