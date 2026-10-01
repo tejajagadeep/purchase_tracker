@@ -68,11 +68,27 @@ class BackupService {
           bytes: bytes,
         );
         if (savedPath != null && savedPath.isNotEmpty) {
-          return savedPath;
+          // EXPLICITLY WRITE TO DISK (Crucial for Windows desktop & file system)
+          final file = File(savedPath);
+          await file.writeAsString(jsonString);
+          return file.path;
         }
       } catch (_) {}
 
-      // 2. Direct save to Android Public Downloads folder: /storage/emulated/0/Download
+      // 2. Windows Downloads Directory Fallback
+      if (Platform.isWindows) {
+        final userProfile = Platform.environment['USERPROFILE'];
+        if (userProfile != null) {
+          final downloadsDir = Directory('$userProfile\\Downloads');
+          if (await downloadsDir.exists()) {
+            final file = File('${downloadsDir.path}\\$fileName');
+            await file.writeAsString(jsonString);
+            return file.path;
+          }
+        }
+      }
+
+      // 3. Android Public Downloads Directory Fallback: /storage/emulated/0/Download
       if (Platform.isAndroid) {
         final downloadDir = Directory('/storage/emulated/0/Download');
         if (await downloadDir.exists()) {
@@ -82,7 +98,7 @@ class BackupService {
         }
       }
 
-      // 3. Fallback to path_provider getDownloadsDirectory / getApplicationDocumentsDirectory
+      // 4. Fallback to path_provider getDownloadsDirectory / getApplicationDocumentsDirectory
       Directory? dir;
       try {
         dir = await getDownloadsDirectory();
