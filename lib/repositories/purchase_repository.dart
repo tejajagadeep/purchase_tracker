@@ -2,23 +2,27 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/purchase_item.dart';
 import '../models/purchase_group.dart';
+import '../models/sub_group.dart';
 import '../data/sample_data.dart';
 
 abstract class IPurchaseRepository {
-  Future<List<PurchaseItem>> getItems({String? groupId});
+  Future<List<PurchaseItem>> getItems({String? groupId, String? subGroupId});
   Future<void> saveItems(List<PurchaseItem> items);
   Future<void> saveItemsForGroup(String groupId, List<PurchaseItem> groupItems);
   Future<List<PurchaseGroup>> getGroups();
   Future<void> saveGroups(List<PurchaseGroup> groups);
   Future<void> deleteGroup(String groupId);
+  Future<List<SubGroup>> getSubGroups({String? groupId});
+  Future<void> saveSubGroups(List<SubGroup> subGroups);
 }
 
 class PurchaseRepository implements IPurchaseRepository {
   static const String _itemsStorageKey = 'purchase_items_v1';
   static const String _groupsStorageKey = 'purchase_groups_v1';
+  static const String _subGroupsStorageKey = 'purchase_subgroups_v1';
 
   @override
-  Future<List<PurchaseItem>> getItems({String? groupId}) async {
+  Future<List<PurchaseItem>> getItems({String? groupId, String? subGroupId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonString = prefs.getString(_itemsStorageKey);
@@ -37,6 +41,9 @@ class PurchaseRepository implements IPurchaseRepository {
         await saveItems(allItems);
       }
 
+      if (subGroupId != null) {
+        return allItems.where((i) => i.subGroupId == subGroupId).toList();
+      }
       if (groupId != null) {
         return allItems.where((i) => i.groupId == groupId).toList();
       }
@@ -84,7 +91,6 @@ class PurchaseRepository implements IPurchaseRepository {
       }
     } catch (_) {}
 
-    // Default Group for Version 1
     final defaultGroup = PurchaseGroup(
       id: 'bike_touring',
       name: 'Bike Touring Accessories',
@@ -116,6 +122,41 @@ class PurchaseRepository implements IPurchaseRepository {
       final allItems = await getItems();
       allItems.removeWhere((i) => i.groupId == groupId);
       await saveItems(allItems);
+
+      final subGroups = await getSubGroups();
+      subGroups.removeWhere((sg) => sg.groupId == groupId);
+      await saveSubGroups(subGroups);
+    } catch (_) {}
+  }
+
+  @override
+  Future<List<SubGroup>> getSubGroups({String? groupId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonString = prefs.getString(_subGroupsStorageKey);
+
+      List<SubGroup> allSubGroups = [];
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonString);
+        allSubGroups = decoded.map((sg) => SubGroup.fromMap(sg)).toList();
+      }
+
+      if (groupId != null) {
+        return allSubGroups.where((sg) => sg.groupId == groupId).toList();
+      }
+      return allSubGroups;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Future<void> saveSubGroups(List<SubGroup> subGroups) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encoded =
+          jsonEncode(subGroups.map((sg) => sg.toMap()).toList());
+      await prefs.setString(_subGroupsStorageKey, encoded);
     } catch (_) {}
   }
 }

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import '../constants/categories.dart';
+import '../models/purchase_group.dart';
 import '../models/purchase_item.dart';
+import '../models/sub_group.dart';
 import '../utils/formatters.dart';
 
 class PurchaseFormBottomSheet extends StatefulWidget {
   final PurchaseItem? existingItem;
   final List<String> categories;
+  final List<PurchaseGroup>? groups;
+  final List<SubGroup>? allSubGroups;
   final String groupId;
+  final String? subGroupId;
   final ValueChanged<PurchaseItem> onSave;
   final VoidCallback? onDelete;
 
@@ -14,7 +19,10 @@ class PurchaseFormBottomSheet extends StatefulWidget {
     super.key,
     this.existingItem,
     required this.categories,
+    this.groups,
+    this.allSubGroups,
     this.groupId = 'bike_touring',
+    this.subGroupId,
     required this.onSave,
     this.onDelete,
   });
@@ -35,6 +43,8 @@ class _PurchaseFormBottomSheetState
   late TextEditingController _notesController;
 
   late String _selectedCategory;
+  late String _selectedGroupId;
+  String? _selectedSubGroupId;
   late List<DateTime?> _unitDates;
 
   @override
@@ -62,6 +72,9 @@ class _PurchaseFormBottomSheetState
       _selectedCategory =
           widget.categories.isNotEmpty ? widget.categories.first : CategoryConstants.defaultCategories.first;
     }
+
+    _selectedGroupId = item?.groupId ?? widget.groupId;
+    _selectedSubGroupId = item?.subGroupId ?? widget.subGroupId;
 
     _unitDates = List<DateTime?>.generate(initialQty, (index) {
       if (item != null && index < item.purchaseDates.length) {
@@ -94,6 +107,13 @@ class _PurchaseFormBottomSheetState
     }
   }
 
+  List<SubGroup> get _availableSubGroups {
+    if (widget.allSubGroups == null) return [];
+    return widget.allSubGroups!
+        .where((sg) => sg.groupId == _selectedGroupId)
+        .toList();
+  }
+
   double get _calculatedTotal {
     final qty = int.tryParse(_quantityController.text) ?? 1;
     final price = double.tryParse(_plannedPriceController.text) ?? 0.0;
@@ -113,7 +133,8 @@ class _PurchaseFormBottomSheetState
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
-        groupId: widget.existingItem?.groupId ?? widget.groupId,
+        groupId: _selectedGroupId,
+        subGroupId: _selectedSubGroupId,
         name: _nameController.text.trim(),
         quantity: qty,
         plannedPrice: plannedPrice,
@@ -135,6 +156,7 @@ class _PurchaseFormBottomSheetState
     final theme = Theme.of(context);
     final isEditing = widget.existingItem != null;
     final purchasedUnitCount = _unitDates.where((d) => d != null).length;
+    final availableSubs = _availableSubGroups;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -184,6 +206,65 @@ class _PurchaseFormBottomSheetState
               ),
 
               const SizedBox(height: 16),
+
+              // Group Dropdown (Move item to another group)
+              if (widget.groups != null && widget.groups!.isNotEmpty) ...[
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedGroupId,
+                  decoration: const InputDecoration(
+                    labelText: 'Group / Trip',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.folder_outlined),
+                  ),
+                  items: widget.groups!.map((g) {
+                    return DropdownMenuItem(
+                      value: g.id,
+                      child: Text(g.name, overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedGroupId = val;
+                        _selectedSubGroupId = null; // Reset subgroup when group changes
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Sub-Group / Month Dropdown (Move item to sub-group)
+              if (availableSubs.isNotEmpty) ...[
+                DropdownButtonFormField<String?>(
+                  initialValue: availableSubs.any((s) => s.id == _selectedSubGroupId)
+                      ? _selectedSubGroupId
+                      : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Sub-Group / Month (Optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.folder_special_outlined),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Main Group (No Sub-Group)'),
+                    ),
+                    ...availableSubs.map((sg) {
+                      return DropdownMenuItem<String?>(
+                        value: sg.id,
+                        child: Text(sg.name, overflow: TextOverflow.ellipsis),
+                      );
+                    }),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedSubGroupId = val;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // Item Name
               TextFormField(

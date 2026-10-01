@@ -3,12 +3,15 @@ import '../constants/categories.dart';
 import '../data/sample_data.dart';
 import '../models/purchase_item.dart';
 import '../models/purchase_group.dart';
+import '../models/sub_group.dart';
 import '../repositories/purchase_repository.dart';
 import '../widgets/purchase_form_bottom_sheet.dart';
 import '../widgets/purchase_item_tile.dart';
 import '../widgets/summary_card.dart';
 import 'backup_restore_screen.dart';
+import 'calendar_expense_screen.dart';
 import 'manage_categories_screen.dart';
+import '../utils/formatters.dart';
 
 enum SortOption {
   nameAsc,
@@ -36,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PurchaseItem> _items = [];
   List<PurchaseGroup> _groups = [];
   PurchaseGroup? _activeGroup;
+  List<SubGroup> _subGroups = [];
+  SubGroup? _activeSubGroup;
+
   List<String> _categories = List<String>.from(CategoryConstants.defaultCategories);
   bool _isLoading = true;
 
@@ -67,12 +73,16 @@ class _HomeScreenState extends State<HomeScreen> {
         (g) => g.id == (_activeGroup?.id ?? loadedGroups.first.id),
         orElse: () => loadedGroups.first,
       );
+
+      final loadedSubGroups = await _repository.getSubGroups(groupId: activeGroup.id);
       final loadedItems = await _repository.getItems(groupId: activeGroup.id);
 
       setState(() {
         _categories = loadedCategories;
         _groups = loadedGroups;
         _activeGroup = activeGroup;
+        _subGroups = loadedSubGroups;
+        _activeSubGroup = null;
         _items = loadedItems;
         _isLoading = false;
       });
@@ -88,9 +98,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isLoading = true;
     });
+    final subGroups = await _repository.getSubGroups(groupId: group.id);
     final items = await _repository.getItems(groupId: group.id);
     setState(() {
       _activeGroup = group;
+      _subGroups = subGroups;
+      _activeSubGroup = null;
       _items = items;
       _isLoading = false;
     });
@@ -155,7 +168,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
-                        subtitle: group.description != null ? Text(group.description!) : null,
+                        subtitle: Text(
+                          group.targetBudget != null
+                              ? 'Budget: ${formatCurrency(group.targetBudget!)}'
+                              : (group.description ?? 'No target budget set'),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -170,6 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 if (action == 'edit') {
                                   Navigator.pop(context);
                                   _showEditGroupDialog(group);
+                                } else if (action == 'move') {
+                                  Navigator.pop(context);
+                                  _showMoveGroupDialog(group);
                                 } else if (action == 'delete') {
                                   Navigator.pop(context);
                                   _confirmDeleteGroup(group);
@@ -186,6 +206,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ],
                                   ),
                                 ),
+                                if (_groups.length > 1)
+                                  const PopupMenuItem(
+                                    value: 'move',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.drive_file_move_outlined, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Move Group To...'),
+                                      ],
+                                    ),
+                                  ),
                                 const PopupMenuItem(
                                   value: 'delete',
                                   child: Row(
@@ -217,7 +248,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddGroupDialog() {
-    final controller = TextEditingController();
+    final nameController = TextEditingController();
+    final budgetController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -226,20 +258,36 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Add Purchase Group'),
         content: Form(
           key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Group Name',
-              hintText: 'e.g. Car Touring, Train Trip, Monthly Expenses',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter group name';
-              }
-              return null;
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Group Name *',
+                  hintText: 'e.g. Car Touring, Monthly Expenses',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter group name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: budgetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Target Group Budget (₹) (Optional)',
+                  hintText: 'e.g. 250000',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.currency_rupee),
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -250,9 +298,13 @@ class _HomeScreenState extends State<HomeScreen> {
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
+                final budgetText = budgetController.text.trim();
+                final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+
                 final newGroup = PurchaseGroup(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  name: controller.text.trim(),
+                  name: nameController.text.trim(),
+                  targetBudget: budget,
                 );
                 setState(() {
                   _groups.add(newGroup);
@@ -270,7 +322,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showEditGroupDialog(PurchaseGroup group) {
-    final controller = TextEditingController(text: group.name);
+    final nameController = TextEditingController(text: group.name);
+    final budgetController = TextEditingController(
+      text: group.targetBudget != null ? group.targetBudget!.toStringAsFixed(0) : '',
+    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -279,19 +334,35 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Edit Purchase Group'),
         content: Form(
           key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Group Name',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter group name';
-              }
-              return null;
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Group Name *',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter group name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: budgetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Target Group Budget (₹) (Optional)',
+                  hintText: 'e.g. 250000',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.currency_rupee),
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -302,13 +373,13 @@ class _HomeScreenState extends State<HomeScreen> {
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
-                final newName = controller.text.trim();
-                final updatedGroup = PurchaseGroup(
-                  id: group.id,
+                final newName = nameController.text.trim();
+                final budgetText = budgetController.text.trim();
+                final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+
+                final updatedGroup = group.copyWith(
                   name: newName,
-                  description: group.description,
-                  iconName: group.iconName,
-                  createdAt: group.createdAt,
+                  targetBudget: budget,
                 );
                 final index = _groups.indexWhere((g) => g.id == group.id);
                 if (index != -1) {
@@ -326,6 +397,173 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text('Save'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditGroupBudgetDialog() {
+    if (_activeGroup == null) return;
+    _showEditGroupDialog(_activeGroup!);
+  }
+
+  void _showAddSubGroupDialog() {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Month / Sub-Group'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Sub-Group / Month Name',
+              hintText: 'e.g. October 2026, November 2026',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter name';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate() && _activeGroup != null) {
+                final newSubGroup = SubGroup(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  groupId: _activeGroup!.id,
+                  name: controller.text.trim(),
+                );
+                setState(() {
+                  _subGroups.add(newSubGroup);
+                  _activeSubGroup = newSubGroup;
+                });
+                _repository.getSubGroups().then((allSubGroups) {
+                  allSubGroups.add(newSubGroup);
+                  _repository.saveSubGroups(allSubGroups);
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMoveGroupDialog(PurchaseGroup sourceGroup) {
+    final otherGroups = _groups.where((g) => g.id != sourceGroup.id).toList();
+    if (otherGroups.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No other groups available to move into.')),
+      );
+      return;
+    }
+
+    String selectedParentGroupId = otherGroups.first.id;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Move "${sourceGroup.name}"'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Convert "${sourceGroup.name}" into a Sub-Group under:'),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: selectedParentGroupId,
+              decoration: const InputDecoration(
+                labelText: 'Target Parent Group',
+                border: OutlineInputBorder(),
+              ),
+              items: otherGroups.map((g) {
+                return DropdownMenuItem(
+                  value: g.id,
+                  child: Text(g.name),
+                );
+              }).toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  selectedParentGroupId = val;
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _moveGroupToParent(sourceGroup, selectedParentGroupId);
+            },
+            child: const Text('Move Group'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _moveGroupToParent(PurchaseGroup sourceGroup, String targetGroupId) async {
+    final targetGroup = _groups.firstWhere((g) => g.id == targetGroupId);
+    final messenger = ScaffoldMessenger.of(context);
+
+    // 1. Create a new SubGroup under targetGroup
+    final newSubGroup = SubGroup(
+      id: sourceGroup.id,
+      groupId: targetGroupId,
+      name: sourceGroup.name,
+    );
+
+    final allSubGroups = await _repository.getSubGroups();
+    allSubGroups.add(newSubGroup);
+    await _repository.saveSubGroups(allSubGroups);
+
+    // 2. Update all purchase items in sourceGroup to targetGroupId & newSubGroup.id
+    final sourceItems = await _repository.getItems(groupId: sourceGroup.id);
+    final updatedSourceItems = sourceItems.map((item) {
+      return item.copyWith(
+        groupId: targetGroupId,
+        subGroupId: newSubGroup.id,
+      );
+    }).toList();
+
+    final targetItems = await _repository.getItems(groupId: targetGroupId);
+    targetItems.addAll(updatedSourceItems);
+    await _repository.saveItemsForGroup(targetGroupId, targetItems);
+
+    // 3. Delete sourceGroup
+    await _repository.deleteGroup(sourceGroup.id);
+
+    // 4. Reload UI data and select targetGroup
+    final updatedGroups = await _repository.getGroups();
+    setState(() {
+      _groups = updatedGroups;
+    });
+    await _selectGroup(targetGroup);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Moved "${sourceGroup.name}" into "${targetGroup.name}" as a Sub-Group!',
+        ),
       ),
     );
   }
@@ -464,20 +702,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openCalendarView() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CalendarExpenseScreen(),
+      ),
+    );
+  }
+
   // Calculations
-  double get totalPlanned {
-    return _items.fold(0.0, (sum, item) => sum + item.plannedTotal);
+  List<PurchaseItem> get _effectiveGroupItems {
+    if (_activeSubGroup == null) return _items;
+    return _items.where((i) => i.subGroupId == _activeSubGroup!.id).toList();
+  }
+
+  double get itemsPlannedTotal {
+    return _effectiveGroupItems.fold(0.0, (sum, item) => sum + item.plannedTotal);
+  }
+
+  double get effectiveGroupBudget {
+    return _activeGroup?.targetBudget ?? itemsPlannedTotal;
   }
 
   double get totalActualSpent {
-    return _items.where((item) => item.isPurchased).fold(
+    return _effectiveGroupItems.where((item) => item.isPurchased).fold(
           0.0,
           (sum, item) => sum + item.actualTotal,
         );
   }
 
   double get totalPurchasedPlanned {
-    return _items.where((item) => item.isPurchased).fold(
+    return _effectiveGroupItems.where((item) => item.isPurchased).fold(
           0.0,
           (sum, item) => sum + item.plannedTotal,
         );
@@ -488,18 +744,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   double get remainingBudget {
-    return _items.where((item) => !item.isPurchased).fold(
-          0.0,
-          (sum, item) => sum + item.plannedTotal,
-        );
+    return effectiveGroupBudget - totalActualSpent;
   }
 
   int get purchasedCount {
-    return _items.where((item) => item.isPurchased).length;
+    return _effectiveGroupItems.where((item) => item.isPurchased).length;
   }
 
   List<PurchaseItem> get _filteredAndSortedItems {
-    return _items.where((item) {
+    return _effectiveGroupItems.where((item) {
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchesName = item.name.toLowerCase().contains(query);
@@ -569,20 +822,55 @@ class _HomeScreenState extends State<HomeScreen> {
         return PurchaseFormBottomSheet(
           existingItem: existingItem,
           categories: _categories,
+          groups: _groups,
+          allSubGroups: _subGroups,
           groupId: _activeGroup?.id ?? 'bike_touring',
-          onSave: (newItem) {
-            setState(() {
-              if (existingItem == null) {
-                _items.add(newItem);
-              } else {
-                final index =
-                    _items.indexWhere((item) => item.id == existingItem.id);
-                if (index != -1) {
-                  _items[index] = newItem;
+          subGroupId: _activeSubGroup?.id,
+          onSave: (newItem) async {
+            final itemWithSubGroup = newItem.copyWith(
+              subGroupId: newItem.groupId == _activeGroup?.id
+                  ? (newItem.subGroupId ?? _activeSubGroup?.id)
+                  : newItem.subGroupId,
+            );
+
+            if (_activeGroup != null && itemWithSubGroup.groupId != _activeGroup!.id) {
+              // Item was moved to another group!
+              final messenger = ScaffoldMessenger.of(context);
+              setState(() {
+                _items.removeWhere((item) => item.id == itemWithSubGroup.id);
+              });
+              await _saveItems();
+
+              // Save item to target group
+              final targetItems = await _repository.getItems(groupId: itemWithSubGroup.groupId);
+              targetItems.add(itemWithSubGroup);
+              await _repository.saveItemsForGroup(itemWithSubGroup.groupId, targetItems);
+
+              final targetGroup = _groups.firstWhere(
+                (g) => g.id == itemWithSubGroup.groupId,
+                orElse: () => _activeGroup!,
+              );
+
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('Moved "${itemWithSubGroup.name}" to ${targetGroup.name}'),
+                ),
+              );
+            } else {
+              // Item remains in active group
+              setState(() {
+                if (existingItem == null) {
+                  _items.add(itemWithSubGroup);
+                } else {
+                  final index =
+                      _items.indexWhere((item) => item.id == existingItem.id);
+                  if (index != -1) {
+                    _items[index] = itemWithSubGroup;
+                  }
                 }
-              }
-            });
-            _saveItems();
+              });
+              await _saveItems();
+            }
           },
           onDelete: existingItem != null
               ? () {
@@ -636,6 +924,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: 'Expense Calendar',
+            onPressed: _openCalendarView,
+          ),
+          IconButton(
             icon: const Icon(Icons.folder_copy_outlined),
             tooltip: 'Switch Group',
             onPressed: _openGroupSelector,
@@ -658,6 +951,8 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) {
               if (value == 'reset') {
                 _resetToDefaults();
+              } else if (value == 'calendar') {
+                _openCalendarView();
               } else if (value == 'manage_categories') {
                 _openManageCategories();
               } else if (value == 'backup_restore') {
@@ -674,6 +969,16 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'calendar',
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Monthly Calendar View'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'switch_group',
                 child: Row(
@@ -734,18 +1039,79 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: _loadData,
               child: CustomScrollView(
                 slivers: [
+                  // Sub-Groups / Months Horizontal Bar
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 36,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _subGroups.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    final isSelected = _activeSubGroup == null;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8.0),
+                                      child: ChoiceChip(
+                                        label: const Text('All Months/Items'),
+                                        selected: isSelected,
+                                        onSelected: (_) {
+                                          setState(() {
+                                            _activeSubGroup = null;
+                                          });
+                                        },
+                                      ),
+                                    );
+                                  }
+
+                                  final sg = _subGroups[index - 1];
+                                  final isSelected = _activeSubGroup?.id == sg.id;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      label: Text(sg.name),
+                                      selected: isSelected,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _activeSubGroup = sg;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, size: 22),
+                            tooltip: 'Add Sub-Group / Month',
+                            onPressed: _showAddSubGroupDialog,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   // Dashboard Summary Card
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: SummaryCard(
-                        totalPlanned: totalPlanned,
+                        groupTargetBudget: _activeGroup?.targetBudget,
+                        itemsPlannedTotal: itemsPlannedTotal,
                         totalActualSpent: totalActualSpent,
                         remainingBudget: remainingBudget,
                         totalSaved: totalSaved,
                         purchasedCount: purchasedCount,
-                        totalCount: _items.length,
-                        title: _activeGroup?.name ?? 'PURCHASE TRACKER',
+                        totalCount: _effectiveGroupItems.length,
+                        title: _activeSubGroup != null
+                            ? '${_activeGroup?.name ?? 'PURCHASES'} • ${_activeSubGroup!.name}'
+                            : (_activeGroup?.name ?? 'PURCHASE TRACKER'),
+                        onEditBudget: _showEditGroupBudgetDialog,
                       ),
                     ),
                   ),

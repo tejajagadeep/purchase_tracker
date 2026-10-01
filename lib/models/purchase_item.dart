@@ -1,6 +1,7 @@
 class PurchaseItem {
   final String id;
   final String groupId;
+  final String? subGroupId;
   final String name;
   final int quantity;
   final double plannedPrice;
@@ -12,6 +13,7 @@ class PurchaseItem {
   PurchaseItem({
     required this.id,
     this.groupId = 'bike_touring',
+    this.subGroupId,
     required this.name,
     this.quantity = 1,
     required this.plannedPrice,
@@ -47,6 +49,7 @@ class PurchaseItem {
   PurchaseItem copyWith({
     String? id,
     String? groupId,
+    String? subGroupId,
     String? name,
     int? quantity,
     double? plannedPrice,
@@ -70,6 +73,7 @@ class PurchaseItem {
     return PurchaseItem(
       id: id ?? this.id,
       groupId: groupId ?? this.groupId,
+      subGroupId: subGroupId ?? this.subGroupId,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       plannedPrice: plannedPrice ?? this.plannedPrice,
@@ -84,6 +88,7 @@ class PurchaseItem {
     return {
       'id': id,
       'groupId': groupId,
+      'subGroupId': subGroupId,
       'name': name,
       'quantity': quantity,
       'plannedPrice': plannedPrice,
@@ -118,6 +123,7 @@ class PurchaseItem {
     return PurchaseItem(
       id: map['id'] ?? '',
       groupId: map['groupId'] ?? 'bike_touring',
+      subGroupId: map['subGroupId'],
       name: map['name'] ?? '',
       quantity: qty,
       plannedPrice: (map['plannedPrice'] as num).toDouble(),
