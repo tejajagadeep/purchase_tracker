@@ -59,12 +59,18 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
   double _getDaySpent(DateTime day) {
     double total = 0.0;
     for (final item in _allItems) {
-      for (final pDate in item.purchaseDates) {
+      for (int i = 0; i < item.purchaseDates.length; i++) {
+        final pDate = item.purchaseDates[i];
         if (pDate.year == day.year &&
             pDate.month == day.month &&
             pDate.day == day.day) {
-          final pricePerUnit = item.actualPrice ?? item.plannedPrice;
-          total += pricePerUnit;
+          double unitPrice = item.plannedPrice;
+          if (i < item.unitActualPrices.length && item.unitActualPrices[i] != null) {
+            unitPrice = item.unitActualPrices[i]!;
+          } else if (item.actualPrice != null) {
+            unitPrice = item.actualPrice!;
+          }
+          total += unitPrice;
         }
       }
     }
@@ -76,19 +82,27 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
     final List<Map<String, dynamic>> list = [];
     for (final item in _allItems) {
       int countOnDay = 0;
-      for (final pDate in item.purchaseDates) {
+      double dayTotal = 0.0;
+      for (int i = 0; i < item.purchaseDates.length; i++) {
+        final pDate = item.purchaseDates[i];
         if (pDate.year == day.year &&
             pDate.month == day.month &&
             pDate.day == day.day) {
           countOnDay++;
+          double unitPrice = item.plannedPrice;
+          if (i < item.unitActualPrices.length && item.unitActualPrices[i] != null) {
+            unitPrice = item.unitActualPrices[i]!;
+          } else if (item.actualPrice != null) {
+            unitPrice = item.actualPrice!;
+          }
+          dayTotal += unitPrice;
         }
       }
       if (countOnDay > 0) {
-        final unitPrice = item.actualPrice ?? item.plannedPrice;
         list.add({
           'item': item,
           'quantity': countOnDay,
-          'total': countOnDay * unitPrice,
+          'total': dayTotal,
         });
       }
     }
@@ -99,11 +113,17 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
   double get _monthlyTotalSpent {
     double total = 0.0;
     for (final item in _allItems) {
-      for (final pDate in item.purchaseDates) {
+      for (int i = 0; i < item.purchaseDates.length; i++) {
+        final pDate = item.purchaseDates[i];
         if (pDate.year == _focusedMonth.year &&
             pDate.month == _focusedMonth.month) {
-          final pricePerUnit = item.actualPrice ?? item.plannedPrice;
-          total += pricePerUnit;
+          double unitPrice = item.plannedPrice;
+          if (i < item.unitActualPrices.length && item.unitActualPrices[i] != null) {
+            unitPrice = item.unitActualPrices[i]!;
+          } else if (item.actualPrice != null) {
+            unitPrice = item.actualPrice!;
+          }
+          total += unitPrice;
         }
       }
     }

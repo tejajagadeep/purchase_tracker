@@ -39,14 +39,15 @@ class _PurchaseFormBottomSheetState
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
   late TextEditingController _plannedPriceController;
+  late TextEditingController _actualQuantityController;
   late TextEditingController _actualPriceController;
   late TextEditingController _notesController;
+  late List<TextEditingController> _unitPriceControllers;
 
   late String _selectedCategory;
   late String _selectedGroupId;
   String? _selectedSubGroupId;
   late List<DateTime?> _unitDates;
-  bool _isTotalActualPriceMode = true;
 
   @override
   void initState() {
@@ -55,27 +56,22 @@ class _PurchaseFormBottomSheetState
 
     _nameController = TextEditingController(text: item?.name ?? '');
     final initialQty = item?.quantity ?? 1;
-    _isTotalActualPriceMode = initialQty > 1;
+    final initialBoughtQty = item?.purchasedQuantity ?? initialQty;
 
     _quantityController =
         TextEditingController(text: initialQty.toString());
+    _actualQuantityController = TextEditingController(
+      text: item != null ? initialBoughtQty.toString() : initialQty.toString(),
+    );
     _plannedPriceController = TextEditingController(
       text: item != null ? item.plannedPrice.toStringAsFixed(0) : '',
     );
 
-    if (item?.actualPrice != null) {
-      if (initialQty > 1) {
-        _actualPriceController = TextEditingController(
-          text: (initialQty * item!.actualPrice!).toStringAsFixed(0),
-        );
-      } else {
-        _actualPriceController = TextEditingController(
-          text: item!.actualPrice!.toStringAsFixed(0),
-        );
-      }
-    } else {
-      _actualPriceController = TextEditingController(text: '');
-    }
+    _actualPriceController = TextEditingController(
+      text: item?.actualPrice != null
+          ? item!.actualPrice!.toStringAsFixed(0)
+          : '',
+    );
 
     _notesController = TextEditingController(text: item?.notes ?? '');
 
@@ -95,6 +91,15 @@ class _PurchaseFormBottomSheetState
       }
       return null;
     });
+
+    _unitPriceControllers = List<TextEditingController>.generate(initialQty, (index) {
+      if (item != null &&
+          index < item.unitActualPrices.length &&
+          item.unitActualPrices[index] != null) {
+        return TextEditingController(text: item.unitActualPrices[index]!.toStringAsFixed(0));
+      }
+      return TextEditingController(text: '');
+    });
   }
 
   @override
@@ -102,8 +107,12 @@ class _PurchaseFormBottomSheetState
     _nameController.dispose();
     _quantityController.dispose();
     _plannedPriceController.dispose();
+    _actualQuantityController.dispose();
     _actualPriceController.dispose();
     _notesController.dispose();
+    for (final controller in _unitPriceControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -112,12 +121,46 @@ class _PurchaseFormBottomSheetState
     if (newQty > 0) {
       setState(() {
         if (newQty > _unitDates.length) {
-          _unitDates.addAll(List.generate(newQty - _unitDates.length, (_) => null));
+          final diff = newQty - _unitDates.length;
+          _unitDates.addAll(List.generate(diff, (_) => null));
+          _unitPriceControllers.addAll(List.generate(diff, (_) => TextEditingController(text: '')));
         } else if (newQty < _unitDates.length) {
+          for (int i = newQty; i < _unitPriceControllers.length; i++) {
+            _unitPriceControllers[i].dispose();
+          }
           _unitDates = _unitDates.sublist(0, newQty);
+          _unitPriceControllers = _unitPriceControllers.sublist(0, newQty);
         }
       });
     }
+  }
+
+  void _onActualQuantityChanged(String value) {
+    final boughtQty = int.tryParse(value) ?? 0;
+    final plannedQty = int.tryParse(_quantityController.text) ?? 1;
+
+    setState(() {
+      _unitDates = List.generate(plannedQty, (index) {
+        if (index < boughtQty) {
+          return (index < _unitDates.length && _unitDates[index] != null)
+              ? _unitDates[index]
+              : DateTime.now();
+        }
+        return null;
+      });
+      _updateActualPriceFromUnits();
+    });
+  }
+
+  void _updateActualPriceFromUnits() {
+    int boughtCount = 0;
+    for (int i = 0; i < _unitDates.length; i++) {
+      if (_unitDates[i] != null) {
+        boughtCount++;
+      }
+    }
+    _actualQuantityController.text = boughtCount.toString();
+    setState(() {});
   }
 
   List<SubGroup> get _availableSubGroups {
@@ -130,18 +173,26 @@ class _PurchaseFormBottomSheetState
   double get _calculatedTotal {
     final qty = int.tryParse(_quantityController.text) ?? 1;
     final plannedPrice = double.tryParse(_plannedPriceController.text) ?? 0.0;
-    final actualText = _actualPriceController.text.trim();
-    if (actualText.isNotEmpty) {
-      final enteredActual = double.tryParse(actualText);
-      if (enteredActual != null) {
-        if (qty > 1 && _isTotalActualPriceMode) {
-          return enteredActual;
+
+    double actualSum = 0.0;
+    int boughtCount = 0;
+
+    for (int i = 0; i < qty; i++) {
+      if (i < _unitDates.length && _unitDates[i] != null) {
+        boughtCount++;
+        final pText = i < _unitPriceControllers.length ? _unitPriceControllers[i].text.trim() : '';
+        final p = double.tryParse(pText);
+        if (p != null) {
+          actualSum += p;
         } else {
-          return qty * enteredActual;
+          actualSum += plannedPrice;
         }
+      } else {
+        actualSum += plannedPrice;
       }
     }
-    return qty * plannedPrice;
+
+    return boughtCount > 0 ? actualSum : qty * plannedPrice;
   }
 
   void _submitForm() {
@@ -149,20 +200,20 @@ class _PurchaseFormBottomSheetState
       final qty = int.parse(_quantityController.text);
       final plannedPrice = double.parse(_plannedPriceController.text);
       final actualPriceText = _actualPriceController.text.trim();
-
-      double? unitActualPrice;
-      if (actualPriceText.isNotEmpty) {
-        final enteredActual = double.tryParse(actualPriceText);
-        if (enteredActual != null) {
-          if (qty > 1 && _isTotalActualPriceMode) {
-            unitActualPrice = enteredActual / qty;
-          } else {
-            unitActualPrice = enteredActual;
-          }
-        }
-      }
+      final actualPrice =
+          actualPriceText.isNotEmpty ? double.tryParse(actualPriceText) : null;
 
       final validDates = _unitDates.whereType<DateTime>().toList();
+      final List<double?> unitPrices = [];
+      for (int i = 0; i < qty; i++) {
+        if (i < _unitDates.length && _unitDates[i] != null) {
+          final pText = i < _unitPriceControllers.length ? _unitPriceControllers[i].text.trim() : '';
+          final p = double.tryParse(pText);
+          unitPrices.add(p); // When empty, p is null -> uses plannedPrice in calculations!
+        } else {
+          unitPrices.add(null);
+        }
+      }
 
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
@@ -172,7 +223,8 @@ class _PurchaseFormBottomSheetState
         name: _nameController.text.trim(),
         quantity: qty,
         plannedPrice: plannedPrice,
-        actualPrice: unitActualPrice,
+        actualPrice: actualPrice,
+        unitActualPrices: unitPrices,
         category: _selectedCategory,
         purchaseDates: validDates,
         notes: _notesController.text.trim().isEmpty
@@ -191,7 +243,7 @@ class _PurchaseFormBottomSheetState
     final isEditing = widget.existingItem != null;
     final purchasedUnitCount = _unitDates.where((d) => d != null).length;
     final availableSubs = _availableSubGroups;
-    final currentQty = int.tryParse(_quantityController.text) ?? 1;
+    final plannedP = double.tryParse(_plannedPriceController.text.trim()) ?? 0.0;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -261,7 +313,7 @@ class _PurchaseFormBottomSheetState
                     if (val != null) {
                       setState(() {
                         _selectedGroupId = val;
-                        _selectedSubGroupId = null; // Reset subgroup when group changes
+                        _selectedSubGroupId = null;
                       });
                     }
                   },
@@ -301,36 +353,66 @@ class _PurchaseFormBottomSheetState
                 const SizedBox(height: 12),
               ],
 
-              // Item Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Item Name *',
-                  hintText: 'e.g. Riding Jacket',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.shopping_bag_outlined),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter item name';
-                  }
-                  return null;
-                },
+              // Item Name & Category Row
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Item Name *',
+                        hintText: 'e.g. Riding Jacket',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.shopping_bag_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter item name';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: widget.categories.map((cat) {
+                        return DropdownMenuItem(
+                          value: cat,
+                          child: Text(cat, overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _selectedCategory = val;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),
 
-              // Quantity & Planned Price Row
+              // Planned Quantity & Planned Price Row
               Row(
                 children: [
-                  // Quantity
                   Expanded(
                     flex: 1,
                     child: TextFormField(
                       controller: _quantityController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Quantity *',
+                        labelText: 'Planned Qty *',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.numbers),
                       ),
@@ -347,10 +429,7 @@ class _PurchaseFormBottomSheetState
                       },
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
-                  // Planned Price per item
                   Expanded(
                     flex: 2,
                     child: TextFormField(
@@ -382,95 +461,41 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Category & Actual Price Row
+              // Actual Quantity Bought & Actual Price Row
               Row(
                 children: [
-                  // Category Dropdown
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedCategory,
+                    flex: 1,
+                    child: TextFormField(
+                      controller: _actualQuantityController,
+                      keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Category',
+                        labelText: 'Qty Bought',
+                        hintText: '0',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.category_outlined),
+                        prefixIcon: Icon(Icons.shopping_cart_checkout),
                       ),
-                      items: widget.categories.map((cat) {
-                        return DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat, overflow: TextOverflow.ellipsis),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedCategory = val;
-                          });
-                        }
-                      },
+                      onChanged: _onActualQuantityChanged,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _actualPriceController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Actual Price Paid per item (₹) (Optional)',
+                        hintText: 'Leave empty if same as planned',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.sell_outlined),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Actual Paid Price Section
-              if (currentQty > 1) ...[
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment<bool>(
-                      value: true,
-                      label: Text('Total Paid'),
-                      icon: Icon(Icons.receipt_outlined, size: 16),
-                    ),
-                    ButtonSegment<bool>(
-                      value: false,
-                      label: Text('Price Per Item'),
-                      icon: Icon(Icons.sell_outlined, size: 16),
-                    ),
-                  ],
-                  selected: {_isTotalActualPriceMode},
-                  onSelectionChanged: (selection) {
-                    setState(() {
-                      _isTotalActualPriceMode = selection.first;
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              TextFormField(
-                controller: _actualPriceController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: currentQty > 1
-                      ? (_isTotalActualPriceMode
-                          ? 'Total Actual Paid for all $currentQty items (₹)'
-                          : 'Actual Price Paid per item (₹)')
-                      : 'Actual Price Paid (₹) (Optional)',
-                  hintText: currentQty > 1
-                      ? (_isTotalActualPriceMode
-                          ? 'e.g. 447 for all $currentQty items'
-                          : 'e.g. 50 per item')
-                      : 'Leave empty if same as planned',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.sell_outlined),
-                  helperText: (currentQty > 1 &&
-                          _actualPriceController.text.trim().isNotEmpty)
-                      ? () {
-                          final val = double.tryParse(_actualPriceController.text.trim());
-                          if (val == null) return null;
-                          if (_isTotalActualPriceMode) {
-                            return '₹${val.toStringAsFixed(0)} total ÷ $currentQty items = ${formatCurrency(val / currentQty)} per item';
-                          } else {
-                            return '₹${val.toStringAsFixed(0)} × $currentQty items = ${formatCurrency(val * currentQty)} total';
-                          }
-                        }()
-                      : null,
-                ),
-                onChanged: (_) => setState(() {}),
               ),
 
               const SizedBox(height: 12),
@@ -488,7 +513,7 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 16),
 
-              // Purchase Dates per Unit Section
+              // Purchase Dates & Per-Unit Actual Price List
               if (_unitDates.length == 1) ...[
                 // Single Quantity Toggle & Date Picker
                 SwitchListTile(
@@ -502,6 +527,8 @@ class _PurchaseFormBottomSheetState
                   onChanged: (val) {
                     setState(() {
                       _unitDates[0] = val ? DateTime.now() : null;
+                      _actualQuantityController.text = val ? '1' : '0';
+                      _updateActualPriceFromUnits();
                     });
                   },
                 ),
@@ -538,7 +565,7 @@ class _PurchaseFormBottomSheetState
                   ),
                 ],
               ] else ...[
-                // Multiple Quantity Unit Purchase Dates List
+                // Multiple Quantity Unit Purchase Dates & Prices List
                 Card(
                   elevation: 0,
                   color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -551,7 +578,7 @@ class _PurchaseFormBottomSheetState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Unit Purchase Dates ($purchasedUnitCount of ${_unitDates.length} Bought)',
+                              'Unit Purchases ($purchasedUnitCount of ${_unitDates.length} Bought)',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -564,6 +591,7 @@ class _PurchaseFormBottomSheetState
                                     _unitDates.length,
                                     (_) => allBought ? null : DateTime.now(),
                                   );
+                                  _updateActualPriceFromUnits();
                                 });
                               },
                               child: Text(
@@ -587,6 +615,7 @@ class _PurchaseFormBottomSheetState
                                     setState(() {
                                       _unitDates[index] =
                                           val == true ? DateTime.now() : null;
+                                      _updateActualPriceFromUnits();
                                     });
                                   },
                                 ),
@@ -594,10 +623,12 @@ class _PurchaseFormBottomSheetState
                                   'Unit ${index + 1}:',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 13,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Expanded(
+                                  flex: 3,
                                   child: isBought
                                       ? OutlinedButton.icon(
                                           onPressed: () async {
@@ -616,10 +647,14 @@ class _PurchaseFormBottomSheetState
                                           },
                                           icon: const Icon(
                                             Icons.calendar_month,
-                                            size: 16,
+                                            size: 14,
                                           ),
                                           label: Text(
                                             formatDate(_unitDates[index]!),
+                                            style: const TextStyle(fontSize: 12),
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           ),
                                         )
                                       : const Text(
@@ -627,8 +662,28 @@ class _PurchaseFormBottomSheetState
                                           style: TextStyle(
                                             color: Colors.grey,
                                             fontStyle: FontStyle.italic,
+                                            fontSize: 12,
                                           ),
                                         ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 2,
+                                  child: TextFormField(
+                                    controller: _unitPriceControllers[index],
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    enabled: isBought,
+                                    decoration: InputDecoration(
+                                      labelText: 'Paid (₹)',
+                                      hintText: plannedP > 0 ? plannedP.toStringAsFixed(0) : '50',
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      isDense: true,
+                                    ),
+                                    onChanged: (_) {
+                                      setState(() {});
+                                    },
+                                  ),
                                 ),
                               ],
                             ),

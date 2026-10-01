@@ -6,6 +6,7 @@ class PurchaseItem {
   final int quantity;
   final double plannedPrice;
   final double? actualPrice;
+  final List<double?> unitActualPrices;
   final String category;
   final List<DateTime> purchaseDates;
   final String? notes;
@@ -18,12 +19,14 @@ class PurchaseItem {
     this.quantity = 1,
     required this.plannedPrice,
     this.actualPrice,
+    List<double?>? unitActualPrices,
     required this.category,
     List<DateTime>? purchaseDates,
     bool? isPurchased,
     DateTime? datePurchased,
     this.notes,
-  }) : purchaseDates = purchaseDates ??
+  })  : unitActualPrices = unitActualPrices ?? [],
+        purchaseDates = purchaseDates ??
             ((isPurchased == true || datePurchased != null)
                 ? List.generate(
                     quantity,
@@ -40,8 +43,20 @@ class PurchaseItem {
 
   double get plannedTotal => quantity * plannedPrice;
 
-  double get actualTotal =>
-      purchasedQuantity * (actualPrice ?? plannedPrice);
+  double get actualTotal {
+    if (unitActualPrices.isNotEmpty) {
+      double sum = 0.0;
+      for (int i = 0; i < purchasedQuantity; i++) {
+        if (i < unitActualPrices.length && unitActualPrices[i] != null) {
+          sum += unitActualPrices[i]!;
+        } else {
+          sum += plannedPrice;
+        }
+      }
+      return sum;
+    }
+    return purchasedQuantity * (actualPrice ?? plannedPrice);
+  }
 
   double get effectiveTotal =>
       purchasedQuantity > 0 ? actualTotal : plannedTotal;
@@ -54,6 +69,7 @@ class PurchaseItem {
     int? quantity,
     double? plannedPrice,
     double? actualPrice,
+    List<double?>? unitActualPrices,
     String? category,
     List<DateTime>? purchaseDates,
     bool? isPurchased,
@@ -78,6 +94,7 @@ class PurchaseItem {
       quantity: quantity ?? this.quantity,
       plannedPrice: plannedPrice ?? this.plannedPrice,
       actualPrice: actualPrice ?? this.actualPrice,
+      unitActualPrices: unitActualPrices ?? this.unitActualPrices,
       category: category ?? this.category,
       purchaseDates: updatedDates ?? this.purchaseDates,
       notes: notes ?? this.notes,
@@ -93,6 +110,7 @@ class PurchaseItem {
       'quantity': quantity,
       'plannedPrice': plannedPrice,
       'actualPrice': actualPrice,
+      'unitActualPrices': unitActualPrices,
       'category': category,
       'purchaseDates': purchaseDates.map((d) => d.toIso8601String()).toList(),
       'isPurchased': isPurchased,
@@ -120,6 +138,12 @@ class PurchaseItem {
       }
     }
 
+    List<double?> unitPrices = [];
+    if (map['unitActualPrices'] != null) {
+      final List<dynamic> list = map['unitActualPrices'];
+      unitPrices = list.map((e) => e == null ? null : (e as num).toDouble()).toList();
+    }
+
     return PurchaseItem(
       id: map['id'] ?? '',
       groupId: map['groupId'] ?? 'bike_touring',
@@ -130,6 +154,7 @@ class PurchaseItem {
       actualPrice: map['actualPrice'] != null
           ? (map['actualPrice'] as num).toDouble()
           : null,
+      unitActualPrices: unitPrices,
       category: map['category'] ?? 'Other',
       purchaseDates: dates,
       notes: map['notes'],
