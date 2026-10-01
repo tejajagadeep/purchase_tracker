@@ -30,6 +30,60 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     widget.onCategoriesUpdated(_categories, oldName, newName);
   }
 
+  void _showIconPickerDialog(String category, IconData currentIcon) {
+    final nav = Navigator.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Select Icon for "$category"'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: GridView.builder(
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: CategoryConstants.selectableIcons.length,
+            itemBuilder: (context, index) {
+              final icon = CategoryConstants.selectableIcons[index];
+              final isSelected = icon == currentIcon;
+              return InkWell(
+                onTap: () async {
+                  await CategoryManager.saveCategoryIcon(category, icon);
+                  setState(() {});
+                  _saveAndNotify();
+                  nav.pop();
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : null,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showAddCategoryDialog() {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -197,7 +251,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Reset Categories'),
         content: const Text(
-          'Reset categories list back to default touring categories?',
+          'Reset categories list back to default categories?',
         ),
         actions: [
           TextButton(
@@ -246,26 +300,37 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final cat = _categories[index];
+          final catIcon = CategoryConstants.getIcon(cat);
           return Card(
             child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Icon(
-                  CategoryConstants.getIcon(cat),
-                  color: theme.colorScheme.primary,
-                  size: 20,
+              leading: InkWell(
+                onTap: () => _showIconPickerDialog(cat, catIcon),
+                borderRadius: BorderRadius.circular(20),
+                child: CircleAvatar(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Icon(
+                    catIcon,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
               ),
               title: Text(
                 cat,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
+              subtitle: Text(
+                'Tap icon to change',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 20),
-                    tooltip: 'Edit',
+                    tooltip: 'Edit Name',
                     onPressed: () => _showEditCategoryDialog(index),
                   ),
                   IconButton(
@@ -274,7 +339,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       size: 20,
                       color: theme.colorScheme.error,
                     ),
-                    tooltip: 'Delete',
+                    tooltip: 'Delete Category',
                     onPressed: () => _deleteCategory(index),
                   ),
                 ],
