@@ -137,11 +137,23 @@ class PurchaseRepository implements IPurchaseRepository {
     final templateGroups = await getTemplateGroups();
     final templateGroupIds = templateGroups.map((g) => g.id).toSet();
 
-    final items = allItems.where((i) => templateGroupIds.contains(i.groupId)).toList();
+    final rawTemplateItems = allItems.where((i) => templateGroupIds.contains(i.groupId)).toList();
 
-    if (items.isEmpty) {
+    // Deduplicate template items by composite key (groupId + name + plannedPrice)
+    final Map<String, PurchaseItem> uniqueMap = {};
+    for (final i in rawTemplateItems) {
+      final key = '${i.groupId}_${i.name.trim().toLowerCase()}_${i.plannedPrice}';
+      if (!uniqueMap.containsKey(key)) {
+        uniqueMap[key] = i;
+      }
+    }
+    final templateItems = uniqueMap.values.toList();
+
+    // Only seed default template items ONCE if no template items exist anywhere
+    if (templateItems.isEmpty && rawTemplateItems.isEmpty) {
       final defaultTemplateItems = getInitialTemplateItems();
-      await saveItems([...allItems, ...defaultTemplateItems]);
+      final updatedAll = [...allItems, ...defaultTemplateItems];
+      await saveItems(updatedAll);
       if (templateGroupId != null) {
         return defaultTemplateItems.where((i) => i.groupId == templateGroupId).toList();
       }
@@ -149,9 +161,9 @@ class PurchaseRepository implements IPurchaseRepository {
     }
 
     if (templateGroupId != null) {
-      return items.where((i) => i.groupId == templateGroupId).toList();
+      return templateItems.where((i) => i.groupId == templateGroupId).toList();
     }
-    return items;
+    return templateItems;
   }
 
   @override
