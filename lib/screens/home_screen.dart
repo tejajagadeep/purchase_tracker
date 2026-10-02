@@ -16,10 +16,10 @@ import 'manage_templates_screen.dart';
 import '../utils/formatters.dart';
 
 enum SortOption {
-  nameAsc,
-  priceHighToLow,
-  priceLowToHigh,
+  name,
+  price,
   status,
+  category,
 }
 
 enum StatusFilter {
@@ -50,7 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
   String _selectedCategory = CategoryConstants.all;
   StatusFilter _statusFilter = StatusFilter.all;
-  SortOption _sortOption = SortOption.nameAsc;
+  SortOption _sortOption = SortOption.name;
+  bool _isSortAscending = true;
   bool _isSearching = false;
 
   final TextEditingController _searchController = TextEditingController();
@@ -1338,19 +1339,26 @@ class _HomeScreenState extends State<HomeScreen> {
       return true;
     }).toList()
       ..sort((a, b) {
+        int comp = 0;
         switch (_sortOption) {
-          case SortOption.nameAsc:
-            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-          case SortOption.priceHighToLow:
-            return b.plannedTotal.compareTo(a.plannedTotal);
-          case SortOption.priceLowToHigh:
-            return a.plannedTotal.compareTo(b.plannedTotal);
+          case SortOption.name:
+            comp = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+            break;
+          case SortOption.price:
+            comp = a.plannedTotal.compareTo(b.plannedTotal);
+            break;
           case SortOption.status:
             if (a.isPurchased == b.isPurchased) {
-              return a.name.compareTo(b.name);
+              comp = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+            } else {
+              comp = a.isPurchased ? 1 : -1;
             }
-            return a.isPurchased ? 1 : -1;
+            break;
+          case SortOption.category:
+            comp = a.category.toLowerCase().compareTo(b.category.toLowerCase());
+            break;
         }
+        return _isSortAscending ? comp : -comp;
       });
   }
 
@@ -1888,33 +1896,101 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
 
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
 
-                              // Sort Button
+                              // Sort Direction Toggle Button
+                              IconButton(
+                                icon: Icon(
+                                  _isSortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                tooltip: _isSortAscending ? 'Ascending Order (Tap to Flip)' : 'Descending Order (Tap to Flip)',
+                                onPressed: () {
+                                  setState(() {
+                                    _isSortAscending = !_isSortAscending;
+                                  });
+                                },
+                              ),
+
+                              // Sort Menu Button
                               PopupMenuButton<SortOption>(
                                 tooltip: 'Sort Items',
                                 icon: const Icon(Icons.sort),
                                 onSelected: (option) {
                                   setState(() {
-                                    _sortOption = option;
+                                    if (_sortOption == option) {
+                                      _isSortAscending = !_isSortAscending;
+                                    } else {
+                                      _sortOption = option;
+                                      _isSortAscending = option == SortOption.price ? false : true;
+                                    }
                                   });
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: SortOption.nameAsc,
-                                    child: Text('Sort by Name'),
+                                  PopupMenuItem(
+                                    value: SortOption.name,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(_sortOption == SortOption.name
+                                            ? (_isSortAscending ? 'Name (A → Z)' : 'Name (Z → A)')
+                                            : 'Sort by Name'),
+                                        if (_sortOption == SortOption.name)
+                                          Icon(
+                                            _isSortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                                            size: 16,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                  const PopupMenuItem(
-                                    value: SortOption.priceHighToLow,
-                                    child: Text('Price: High to Low'),
+                                  PopupMenuItem(
+                                    value: SortOption.price,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(_sortOption == SortOption.price
+                                            ? (_isSortAscending ? 'Price (Low → High)' : 'Price (High → Low)')
+                                            : 'Sort by Price'),
+                                        if (_sortOption == SortOption.price)
+                                          Icon(
+                                            _isSortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                                            size: 16,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                  const PopupMenuItem(
-                                    value: SortOption.priceLowToHigh,
-                                    child: Text('Price: Low to High'),
+                                  PopupMenuItem(
+                                    value: SortOption.category,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('Sort by Category'),
+                                        if (_sortOption == SortOption.category)
+                                          Icon(
+                                            _isSortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                                            size: 16,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: SortOption.status,
-                                    child: Text('Sort by Status'),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('Sort by Status'),
+                                        if (_sortOption == SortOption.status)
+                                          Icon(
+                                            _isSortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                                            size: 16,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
