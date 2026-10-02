@@ -1,21 +1,14 @@
-MIT License
+# Proprietary License - All Rights Reserved
 
-Copyright (c) 2026 Purchase Tracker
+Copyright (c) 2026 Purchase Tracker. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software and associated documentation files (the "Software") are proprietary and confidential.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+### Terms & Restrictions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. **Exclusive Ownership**: All title, ownership rights, and intellectual property rights in and to the Software remain exclusively with the copyright holder.
+2. **No Unauthorized Reproduction**: You may not copy, duplicate, reproduce, modify, adapt, or create derivative works of this Software, in whole or in part, without prior explicit written permission from the copyright holder.
+3. **No Distribution or Sublicensing**: You may not distribute, publish, share, sell, lease, rent, sublicense, or transfer this Software or any portion thereof to any third party under any circumstances.
+4. **No Commercial Exploitation**: Unauthorized commercial use, re-branding, or distribution of this Software is strictly prohibited.
+
+ANY UNAUTHORIZED COPYING, MODIFICATION, REPRODUCTION, OR DISTRIBUTION OF THIS SOFTWARE IS STRICTLY PROHIBITED AND PROTECTED BY COPYRIGHT LAWS.

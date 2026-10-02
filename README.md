@@ -1,17 +1,32 @@
-# purchase_tracker
+# Purchase Tracker
 
-Purchase Tracker is a personal expense and purchase management application that helps users plan, track, and manage purchases over time. Users can add items with quantities, planned prices, actual purchase prices, categories, purchase status, and notes. The app automatically calculates item totals, planned spending, actual spending, and remaining amounts, making it easy to manage budgets and track purchases.
+**Purchase Tracker** is a personal expense, budget, and purchase management application built with Flutter & Material 3. It helps users plan, track, and manage purchases over time across custom groups and sub-groups/months.
+
+## Features
+- **Planned vs. Actual Expenses**: Track planned budgets, actual amounts spent, and total money saved.
+- **Multi-Quantity Purchases**: Set unit-by-unit purchase dates and per-unit actual prices.
+- **Groups & Sub-Groups**: Organize purchases by trips, projects, or monthly lists.
+- **Interactive Calendar**: View daily expense totals on a monthly calendar.
+- **Master Templates**: Manage reusable master template presets for recurring lists.
+- **Local Data Privacy**: 100% private offline storage with full JSON Backup & Restore.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To run the application locally:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+To build a release APK or AAB:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter build apk --release
+flutter build appbundle --release
+```
+
+## License
+
+Copyright (c) 2026 Purchase Tracker. All Rights Reserved.  
+This project is covered under a **Proprietary License** - see the [LICENSE.md](LICENSE.md) file for details.
