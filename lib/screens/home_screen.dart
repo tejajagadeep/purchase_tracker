@@ -1293,7 +1293,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   double get totalSaved {
-    return totalPurchasedPlanned - totalActualSpent;
+    double saved = 0.0;
+    for (final item in _effectiveGroupItems) {
+      if (item.isPurchased) {
+        saved += (item.plannedTotal - item.actualTotal);
+      }
+    }
+    return saved;
   }
 
   double get remainingBudget {
@@ -1348,20 +1354,56 @@ class _HomeScreenState extends State<HomeScreen> {
       });
   }
 
-  void _togglePurchased(PurchaseItem item) {
+  void _togglePurchased(PurchaseItem item) async {
     final updatedIndex = _items.indexWhere((element) => element.id == item.id);
-    if (updatedIndex != -1) {
-      final isNowPurchased = !item.isPurchased;
-      final updatedItem = item.copyWith(
-        purchaseDates: isNowPurchased
-            ? List.generate(item.quantity, (_) => DateTime.now())
-            : [],
+    if (updatedIndex == -1) return;
+
+    final isNowPurchased = !item.isPurchased;
+
+    if (!isNowPurchased) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Unselect "${item.name}"?'),
+          content: Text(
+            'Unselecting this purchase will reset its recorded purchase status and dates. Are you sure you want to unselect?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Unselect'),
+            ),
+          ],
+        ),
       );
-      setState(() {
-        _items[updatedIndex] = updatedItem;
-      });
-      _saveItems();
+
+      if (confirm != true) return;
     }
+
+    List<DateTime> newDates;
+    if (isNowPurchased) {
+      if (item.purchasedQuantity > 0) {
+        newDates = item.purchaseDates;
+      } else {
+        newDates = List.generate(item.quantity, (_) => DateTime.now());
+      }
+    } else {
+      newDates = [];
+    }
+
+    final updatedItem = item.copyWith(
+      purchaseDates: newDates,
+      isCompleted: isNowPurchased,
+    );
+    setState(() {
+      _items[updatedIndex] = updatedItem;
+    });
+    _saveItems();
   }
 
   void _addUnitBoughtToday(PurchaseItem item) {

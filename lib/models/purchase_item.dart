@@ -9,6 +9,7 @@ class PurchaseItem {
   final List<double?> unitActualPrices;
   final String category;
   final List<DateTime> purchaseDates;
+  final bool isCompleted;
   final String? notes;
 
   PurchaseItem({
@@ -24,6 +25,7 @@ class PurchaseItem {
     List<DateTime>? purchaseDates,
     bool? isPurchased,
     DateTime? datePurchased,
+    this.isCompleted = false,
     this.notes,
   })  : unitActualPrices = unitActualPrices ?? [],
         purchaseDates = purchaseDates ??
@@ -34,7 +36,7 @@ class PurchaseItem {
                   )
                 : []);
 
-  bool get isPurchased => purchaseDates.length >= quantity;
+  bool get isPurchased => isCompleted || (quantity > 0 && purchaseDates.length >= quantity);
 
   int get purchasedQuantity => purchaseDates.length;
 
@@ -49,8 +51,6 @@ class PurchaseItem {
       for (int i = 0; i < purchasedQuantity; i++) {
         if (i < unitActualPrices.length && unitActualPrices[i] != null) {
           sum += unitActualPrices[i]!;
-        } else if (actualPrice != null) {
-          sum += actualPrice!;
         } else {
           sum += plannedPrice;
         }
@@ -76,6 +76,7 @@ class PurchaseItem {
     List<DateTime>? purchaseDates,
     bool? isPurchased,
     DateTime? datePurchased,
+    bool? isCompleted,
     String? notes,
   }) {
     List<DateTime>? updatedDates = purchaseDates;
@@ -99,6 +100,7 @@ class PurchaseItem {
       unitActualPrices: unitActualPrices ?? this.unitActualPrices,
       category: category ?? this.category,
       purchaseDates: updatedDates ?? this.purchaseDates,
+      isCompleted: isCompleted ?? this.isCompleted,
       notes: notes ?? this.notes,
     );
   }
@@ -116,6 +118,7 @@ class PurchaseItem {
       'category': category,
       'purchaseDates': purchaseDates.map((d) => d.toIso8601String()).toList(),
       'isPurchased': isPurchased,
+      'isCompleted': isCompleted,
       'notes': notes,
       'datePurchased': datePurchased?.toIso8601String(),
     };
@@ -146,6 +149,8 @@ class PurchaseItem {
       unitPrices = list.map((e) => e == null ? null : (e as num).toDouble()).toList();
     }
 
+    final bool isCompletedVal = map['isCompleted'] ?? (map['isPurchased'] == true);
+
     return PurchaseItem(
       id: map['id'] ?? '',
       groupId: map['groupId'] ?? 'bike_touring',
@@ -159,6 +164,7 @@ class PurchaseItem {
       unitActualPrices: unitPrices,
       category: map['category'] ?? 'Other',
       purchaseDates: dates,
+      isCompleted: isCompletedVal,
       notes: map['notes'],
     );
   }
