@@ -118,12 +118,6 @@ class _PurchaseFormBottomSheetState
           final diff = newQty - _unitDates.length;
           _unitDates.addAll(List.generate(diff, (_) => null));
           _unitPriceControllers.addAll(List.generate(diff, (_) => TextEditingController(text: '')));
-        } else if (newQty < _unitDates.length) {
-          for (int i = newQty; i < _unitPriceControllers.length; i++) {
-            _unitPriceControllers[i].dispose();
-          }
-          _unitDates = _unitDates.sublist(0, newQty);
-          _unitPriceControllers = _unitPriceControllers.sublist(0, newQty);
         }
         _updateActualPriceFromUnits();
       });
@@ -207,7 +201,7 @@ class _PurchaseFormBottomSheetState
       final actualPriceInput =
           actualPriceText.isNotEmpty ? double.tryParse(actualPriceText) : null;
 
-      final validDates = _unitDates.whereType<DateTime>().toList();
+      final validDates = _unitDates.take(qty).whereType<DateTime>().toList();
       final List<double?> unitPrices = [];
       double sumUnitPrices = 0.0;
       int boughtCount = 0;
