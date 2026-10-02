@@ -1685,45 +1685,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Sub-Groups / Months Horizontal Choice Bar
                   if (_subGroups.isNotEmpty) ...[
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        margin: const EdgeInsets.only(top: 8.0),
                         child: Row(
                           children: [
                             Expanded(
-                              child: SizedBox(
-                                height: 42,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _subGroups.length + 1,
-                                  itemBuilder: (context, index) {
-                                    if (index == 0) {
-                                      final isSelected = _activeSubGroup == null;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 8.0),
-                                        child: ChoiceChip(
-                                          showCheckmark: false,
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          visualDensity: VisualDensity.compact,
-                                          labelPadding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 0,
-                                          ),
-                                          label: const Text(
-                                            'All Months/Groups',
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          selected: isSelected,
-                                          onSelected: (_) {
-                                            setState(() {
-                                              _activeSubGroup = null;
-                                            });
-                                          },
-                                        ),
-                                      );
-                                    }
-
-                                    final sg = _subGroups[index - 1];
-                                    final isSelected = _activeSubGroup?.id == sg.id;
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _subGroups.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    final isSelected = _activeSubGroup == null;
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 8.0),
                                       child: ChoiceChip(
@@ -1734,33 +1708,58 @@ class _HomeScreenState extends State<HomeScreen> {
                                           horizontal: 12,
                                           vertical: 0,
                                         ),
-                                        label: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (sg.isPinned) ...[
-                                              const Icon(
-                                                Icons.push_pin,
-                                                size: 14,
-                                                color: Colors.orange,
-                                              ),
-                                              const SizedBox(width: 4),
-                                            ],
-                                            Text(
-                                              sg.name,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
+                                        label: const Text(
+                                          'All Months/Groups',
+                                          textAlign: TextAlign.center,
                                         ),
                                         selected: isSelected,
                                         onSelected: (_) {
                                           setState(() {
-                                            _activeSubGroup = sg;
+                                            _activeSubGroup = null;
                                           });
                                         },
                                       ),
                                     );
-                                  },
-                                ),
+                                  }
+
+                                  final sg = _subGroups[index - 1];
+                                  final isSelected = _activeSubGroup?.id == sg.id;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      showCheckmark: false,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                      labelPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 0,
+                                      ),
+                                      label: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (sg.isPinned) ...[
+                                            const Icon(
+                                              Icons.push_pin,
+                                              size: 14,
+                                              color: Colors.orange,
+                                            ),
+                                            const SizedBox(width: 4),
+                                          ],
+                                          Text(
+                                            sg.name,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                      selected: isSelected,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _activeSubGroup = sg;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                             IconButton(

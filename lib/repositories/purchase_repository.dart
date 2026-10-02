@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/purchase_item.dart';
 import '../models/purchase_group.dart';
 import '../models/sub_group.dart';
-import '../data/sample_data.dart';
 
 abstract class IPurchaseRepository {
   Future<List<PurchaseItem>> getItems({String? groupId, String? subGroupId});
@@ -30,16 +29,14 @@ class PurchaseRepository implements IPurchaseRepository {
       final String? jsonString = prefs.getString(_itemsStorageKey);
 
       List<PurchaseItem> allItems = [];
-      if (jsonString != null && jsonString.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonString);
-        if (decoded.isNotEmpty) {
+      if (jsonString != null) {
+        if (jsonString.isNotEmpty) {
+          final List<dynamic> decoded = jsonDecode(jsonString);
           allItems = decoded.map((item) => PurchaseItem.fromMap(item)).toList();
-        } else {
-          allItems = getInitialSampleData();
-          await saveItems(allItems);
         }
       } else {
-        allItems = getInitialSampleData();
+        // Fresh install: default to empty items
+        allItems = [];
         await saveItems(allItems);
       }
 
@@ -51,11 +48,7 @@ class PurchaseRepository implements IPurchaseRepository {
       }
       return allItems;
     } catch (_) {
-      final initial = getInitialSampleData();
-      if (groupId != null) {
-        return initial.where((i) => i.groupId == groupId).toList();
-      }
-      return initial;
+      return [];
     }
   }
 
@@ -85,9 +78,9 @@ class PurchaseRepository implements IPurchaseRepository {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonString = prefs.getString(_groupsStorageKey);
 
-      if (jsonString != null && jsonString.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonString);
-        if (decoded.isNotEmpty) {
+      if (jsonString != null) {
+        if (jsonString.isNotEmpty) {
+          final List<dynamic> decoded = jsonDecode(jsonString);
           final list = decoded.map((g) => PurchaseGroup.fromMap(g)).toList();
           final filtered = includeTemplates ? list : list.where((g) => !g.isTemplate).toList();
           filtered.sort((a, b) {
@@ -103,9 +96,9 @@ class PurchaseRepository implements IPurchaseRepository {
 
     final defaultGroup = PurchaseGroup(
       id: 'bike_touring',
-      name: 'Bike Touring Accessories',
-      description: 'Touring accessories and gear purchases',
-      iconName: 'two_wheeler',
+      name: 'Main Purchase Group',
+      description: 'Default purchase group',
+      iconName: 'folder_outlined',
     );
     final initialGroups = [defaultGroup];
     await saveGroups(initialGroups);
@@ -116,18 +109,6 @@ class PurchaseRepository implements IPurchaseRepository {
   Future<List<PurchaseGroup>> getTemplateGroups() async {
     final allGroups = await getGroups(includeTemplates: true);
     final templates = allGroups.where((g) => g.isTemplate).toList();
-    if (templates.isEmpty) {
-      final defaults = getInitialTemplateGroups();
-      final updatedGroups = [...allGroups, ...defaults];
-      await saveGroups(updatedGroups);
-
-      // Save template items
-      final currentItems = await getItems();
-      final templateItems = getInitialTemplateItems();
-      await saveItems([...currentItems, ...templateItems]);
-
-      return defaults;
-    }
     return templates;
   }
 
@@ -148,17 +129,6 @@ class PurchaseRepository implements IPurchaseRepository {
       }
     }
     final templateItems = uniqueMap.values.toList();
-
-    // Only seed default template items ONCE if no template items exist anywhere
-    if (templateItems.isEmpty && rawTemplateItems.isEmpty) {
-      final defaultTemplateItems = getInitialTemplateItems();
-      final updatedAll = [...allItems, ...defaultTemplateItems];
-      await saveItems(updatedAll);
-      if (templateGroupId != null) {
-        return defaultTemplateItems.where((i) => i.groupId == templateGroupId).toList();
-      }
-      return defaultTemplateItems;
-    }
 
     if (templateGroupId != null) {
       return templateItems.where((i) => i.groupId == templateGroupId).toList();

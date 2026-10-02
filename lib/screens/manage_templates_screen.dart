@@ -28,21 +28,47 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
   }
 
   Future<void> _loadTemplates() async {
-    final loadedCategories = await CategoryManager.loadCategories();
-    final groups = await _repository.getTemplateGroups();
-    final activeTemplate = groups.firstWhere(
-      (g) => g.id == (_selectedTemplate?.id ?? groups.first.id),
-      orElse: () => groups.first,
-    );
-    final items = await _repository.getTemplateItems(templateGroupId: activeTemplate.id);
+    try {
+      final loadedCategories = await CategoryManager.loadCategories();
+      var groups = await _repository.getTemplateGroups();
 
-    setState(() {
-      _categories = loadedCategories;
-      _templateGroups = groups;
-      _selectedTemplate = activeTemplate;
-      _templateItems = items;
-      _isLoading = false;
-    });
+      if (groups.isEmpty) {
+        final defaultTemplate = PurchaseGroup(
+          id: 'template_general',
+          name: 'General Master Template',
+          description: 'Default master template',
+          isTemplate: true,
+        );
+        groups = [defaultTemplate];
+        final allGroups = await _repository.getGroups(includeTemplates: true);
+        if (!allGroups.any((g) => g.id == defaultTemplate.id)) {
+          allGroups.add(defaultTemplate);
+          await _repository.saveGroups(allGroups);
+        }
+      }
+
+      final activeTemplate = groups.firstWhere(
+        (g) => g.id == _selectedTemplate?.id,
+        orElse: () => groups.first,
+      );
+      final items = await _repository.getTemplateItems(templateGroupId: activeTemplate.id);
+
+      if (mounted) {
+        setState(() {
+          _categories = loadedCategories;
+          _templateGroups = groups;
+          _selectedTemplate = activeTemplate;
+          _templateItems = items;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _selectTemplate(PurchaseGroup group) async {
@@ -270,9 +296,13 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
       final groups = await _repository.getTemplateGroups();
       setState(() {
         _templateGroups = groups;
-        _selectedTemplate = groups.first;
+        _selectedTemplate = groups.isNotEmpty ? groups.first : null;
       });
-      await _selectTemplate(groups.first);
+      if (groups.isNotEmpty) {
+        await _selectTemplate(groups.first);
+      } else {
+        await _loadTemplates();
+      }
       messenger.showSnackBar(
         SnackBar(content: Text('Deleted template preset "${groupToDelete.name}".')),
       );
