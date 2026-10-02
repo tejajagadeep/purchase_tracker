@@ -22,9 +22,7 @@ class PurchaseItemTile extends StatelessWidget {
     if (item.quantity == 1) {
       return formatDate(item.purchaseDates.first);
     }
-    // Multiple quantities
-    final datesStr = item.purchaseDates.map((d) => '${d.day}/${d.month}').join(', ');
-    return '${item.purchasedQuantity}/${item.quantity} bought ($datesStr)';
+    return 'bought ${item.purchasedQuantity} out of ${item.quantity}';
   }
 
   @override
@@ -59,7 +57,7 @@ class PurchaseItemTile extends StatelessWidget {
                           child: Text(
                             item.name,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               decoration: item.isPurchased
                                   ? TextDecoration.lineThrough
                                   : null,
@@ -178,7 +176,7 @@ class PurchaseItemTile extends StatelessWidget {
                       item.isPurchased
                           ? 'Purchased'
                           : (item.purchasedQuantity > 0
-                              ? '${item.purchasedQuantity}/${item.quantity} Bought'
+                              ? 'bought ${item.purchasedQuantity} out of ${item.quantity}'
                               : 'Pending'),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: item.isPurchased
