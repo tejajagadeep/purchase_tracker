@@ -25,9 +25,10 @@ class PurchaseItem {
     List<DateTime>? purchaseDates,
     bool? isPurchased,
     DateTime? datePurchased,
-    this.isCompleted = false,
+    bool? isCompleted,
     this.notes,
   })  : unitActualPrices = unitActualPrices ?? [],
+        isCompleted = isCompleted ?? (isPurchased == true),
         purchaseDates = purchaseDates ??
             ((isPurchased == true || datePurchased != null)
                 ? List.generate(
@@ -36,7 +37,7 @@ class PurchaseItem {
                   )
                 : []);
 
-  bool get isPurchased => isCompleted || (quantity > 0 && purchaseDates.length >= quantity);
+  bool get isPurchased => isCompleted;
 
   int get purchasedQuantity => purchaseDates.length;
 

@@ -236,6 +236,8 @@ class _PurchaseFormBottomSheetState
           ? (boughtCount > 0 ? sumUnitPrices / boughtCount : null)
           : actualPriceInput;
 
+      final bool isCompletedVal = validDates.length >= qty || (_unitDates.isNotEmpty && _unitDates[0] != null);
+
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
@@ -248,6 +250,7 @@ class _PurchaseFormBottomSheetState
         unitActualPrices: unitPrices,
         category: _selectedCategory,
         purchaseDates: validDates,
+        isCompleted: isCompletedVal,
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
