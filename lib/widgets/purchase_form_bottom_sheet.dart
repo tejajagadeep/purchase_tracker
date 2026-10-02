@@ -302,9 +302,36 @@ class _PurchaseFormBottomSheetState
                   if (isEditing && widget.onDelete != null)
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () {
-                        widget.onDelete!();
-                        Navigator.pop(context);
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Delete "${widget.existingItem?.name}"?'),
+                            content: const Text(
+                              'Are you sure you want to delete this purchase item? This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          widget.onDelete!();
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        }
                       },
                     ),
                 ],
