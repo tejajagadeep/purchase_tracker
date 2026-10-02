@@ -5,58 +5,89 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Shopping Bag Handle -->
+    <!-- 1. White Receipt Paper Document behind cart -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,22 L37,25 L40,22 L43,25 L46,22 L49,25 L52,22 L55,25 L58,22 L61,25 L64,22 L67,25 L70,22 L73,25 L74,22 L74,54 C74,55.5 72.8,56.5 71.2,56.5 L36.8,56.5 C35.2,56.5 34,55.5 34,54 Z" />
+
+    <!-- Receipt Checklist Line 1 (Green Bullet) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M38,30h4v4h-4z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M45,31h23v2h-23z" />
+
+    <!-- Receipt Checklist Line 2 (Orange Bullet) -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M38,37h4v4h-4z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M45,38h23v2h-23z" />
+
+    <!-- Receipt Checklist Line 3 (Blue Bullet) -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M38,44h4v4h-4z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M45,45h20v2h-20z" />
+
+    <!-- 2. White Shopping Cart -->
+    <!-- Cart Wireframe Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,48 L70,45 C73,45 75,47 74,50 L68,68 C67.5,70.5 65.5,72 63,72 L42,72 C39.5,72 37.5,70.5 37,68 L32,38 L28,38 C27,38 26,37 26,36 C26,35 27,34 28,34 L33.5,34 C34.5,34 35.5,34.8 35.8,35.8 Z" />
+
+    <!-- Cart Basket Interior Cutout Line -->
+    <path
+        android:fillColor="#006064"
+        android:pathData="M39,51 L68,48 L65,66 L41,66 Z" />
+
+    <!-- Cart Wheels -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,80 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,80 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+
+    <!-- 3. Green Verified Checkmark Circle Badge (Right) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M63,58 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+    <!-- White Checkmark in Badge -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M44,40 C44,30 64,30 64,40" />
-
-    <!-- Shopping Bag Body -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M34,41 C34,39.5 35.2,38 36.8,38 L71.2,38 C72.8,38 74,39.5 74,41 L70.5,74 C70.1,77.5 67.2,80 63.6,80 L44.4,80 C40.8,80 37.9,77.5 37.5,74 Z" />
-
-    <!-- Inner Fold Detail on Bag -->
-    <path
-        android:fillColor="#E3F2FD"
-        android:pathData="M38,44 L70,44 L68,62 L40,62 Z" />
-
-    <!-- Purchase Receipt / Checklist Card -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M43,48 C43,46.3 44.3,45 46,45 L62,45 C63.7,45 65,46.3 65,48 L65,73 C65,74.7 63.7,76 62,76 L46,76 C44.3,76 43,74.7 43,73 Z" />
-
-    <!-- Checklist Lines -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#90CAF9"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:pathData="M48,51 L60,51 M48,56 L56,56" />
-
-    <!-- Verified Checkmark -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#2E7D32"
-        android:strokeWidth="3"
+        android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M47,66 L52,70 L61,60" />
+        android:pathData="M57,58 L61,62 L69,54" />
 
-    <!-- Gold Savings Coin Badge -->
+    <!-- 4. Gold Rupee Coin Badge (Bottom-Left) -->
+    <!-- Outer Gold Ring -->
     <path
         android:fillColor="#FFC107"
-        android:pathData="M70,42m-8,0a8,8 0 1,0 16,0a8,8 0 1,0 -16,0" />
+        android:pathData="M28,62 m-13,0 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0" />
+    <!-- Inner Gold Surface -->
+    <path
+        android:fillColor="#FFCA28"
+        android:pathData="M28,62 m-11,0 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0" />
 
-    <!-- Verified Checkmark inside Gold Badge -->
+    <!-- Rupee Symbol (₹) inside Coin -->
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M23,55 h10 v2.5 h-10 z" />
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M23,59.5 h10 v2.5 h-10 z" />
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#5D4037"
-        android:strokeWidth="2"
+        android:strokeColor="#3E2723"
+        android:strokeWidth="2.5"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M67,42 L69,44 L73,40" />
+        android:pathData="M25,55 v10 c0,0 5,0 5,-4 c0,-4 -5,-4 -5,-4 M26,63 L32,70" />
 
 </vector>
