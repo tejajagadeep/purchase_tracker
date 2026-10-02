@@ -1224,13 +1224,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return _activeGroup!.targetBudget!;
     }
     if (_subGroups.isNotEmpty) {
-      double sumSubBudgets = 0.0;
+      double totalBudget = 0.0;
+      // 1. Sum sub-groups target budgets (or sub-groups planned items)
       for (final sg in _subGroups) {
         final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
         final sgPlanned = sgItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
-        sumSubBudgets += sg.targetBudget ?? sgPlanned;
+        totalBudget += sg.targetBudget ?? sgPlanned;
       }
-      return sumSubBudgets;
+      // 2. Add unassigned main group items planned total
+      final unassignedItems = _items.where((i) => i.subGroupId == null).toList();
+      final unassignedPlanned = unassignedItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
+      totalBudget += unassignedPlanned;
+
+      return totalBudget;
     }
     return itemsPlannedTotal;
   }
