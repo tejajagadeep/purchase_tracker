@@ -398,57 +398,26 @@ class _PurchaseFormBottomSheetState
                 const SizedBox(height: 12),
               ],
 
-              // Item Name & Category Row
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Item Name *',
-                        hintText: 'e.g. Riding Jacket',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.shopping_bag_outlined),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter item name';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 1,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedCategory,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: widget.categories.map((cat) {
-                        return DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat, overflow: TextOverflow.ellipsis),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedCategory = val;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
+              // Line 1: Item Name
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Item Name *',
+                  hintText: 'e.g. Riding Jacket',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.shopping_bag_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter item name';
+                  }
+                  return null;
+                },
               ),
 
               const SizedBox(height: 12),
 
-              // Planned Quantity & Planned Price Row
+              // Line 2: Planned Quantity & Planned Price Row
               Row(
                 children: [
                   Expanded(
@@ -508,7 +477,7 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Actual Price (Full Width)
+              // Line 3: Actual Price (Full Width)
               TextFormField(
                 controller: _actualPriceController,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -525,7 +494,32 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Notes
+              // Line 4: Category Dropdown (On Line 4)
+              DropdownButtonFormField<String>(
+                initialValue: _selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category_outlined),
+                ),
+                items: widget.categories.map((cat) {
+                  return DropdownMenuItem(
+                    value: cat,
+                    child: Text(cat, overflow: TextOverflow.ellipsis),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedCategory = val;
+                    });
+                  }
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              // Line 5: Notes
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(
