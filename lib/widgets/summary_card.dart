@@ -28,12 +28,15 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final double progress =
-        totalCount == 0 ? 0.0 : purchasedCount / totalCount;
     final bool hasValidGroupBudget =
         groupTargetBudget != null && groupTargetBudget! > 0;
     final effectiveBudget =
         hasValidGroupBudget ? groupTargetBudget! : itemsPlannedTotal;
+    final double budgetForProgress =
+        effectiveBudget > 0 ? effectiveBudget : itemsPlannedTotal;
+    final double progress = budgetForProgress <= 0
+        ? 0.0
+        : (totalActualSpent / budgetForProgress).clamp(0.0, 1.0);
 
     return Container(
       decoration: BoxDecoration(
