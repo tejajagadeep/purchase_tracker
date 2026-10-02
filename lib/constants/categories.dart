@@ -6,54 +6,54 @@ class CategoryConstants {
   static const String all = 'All';
 
   static const List<String> defaultCategories = [
-    'Riding Gear',
-    'Camping',
-    'Camera / Electronics',
-    'Luggage & Bags',
-    'Bike Tools & Parts',
     'Bike Accessories',
-    'Safety & Protection',
-    'Food & Dining',
-    'Groceries & Supplies',
-    'Fuel & Petrol',
-    'Travel & Hotels',
-    'Clothing & Fashion',
-    'Health & Medical',
+    'Bike Tools & Parts',
     'Bills & Utilities',
-    'Rent & Housing',
-    'Loan & EMI',
+    'Camera / Electronics',
+    'Camping',
+    'Clothing & Fashion',
     'Debt & Repayment',
-    'Entertainment',
-    'Gifts & Donations',
-    'Sports & Fitness',
     'Education & Books',
+    'Entertainment',
+    'Food & Dining',
+    'Fuel & Petrol',
+    'Gifts & Donations',
+    'Groceries & Supplies',
+    'Health & Medical',
+    'Loan & EMI',
+    'Luggage & Bags',
+    'Rent & Housing',
+    'Riding Gear',
+    'Safety & Protection',
     'Services & Repair',
+    'Sports & Fitness',
+    'Travel & Hotels',
     'Other',
   ];
 
   static const Map<String, IconData> predefinedIcons = {
-    'Riding Gear': Icons.sports_motorsports,
-    'Camping': Icons.other_houses,
-    'Camera / Electronics': Icons.photo_camera,
-    'Luggage & Bags': Icons.work,
-    'Bike Tools & Parts': Icons.build,
     'Bike Accessories': Icons.two_wheeler,
-    'Safety & Protection': Icons.security,
-    'Food & Dining': Icons.restaurant,
-    'Groceries & Supplies': Icons.shopping_cart,
-    'Fuel & Petrol': Icons.local_gas_station,
-    'Travel & Hotels': Icons.hotel,
-    'Clothing & Fashion': Icons.checkroom,
-    'Health & Medical': Icons.medical_services,
+    'Bike Tools & Parts': Icons.build,
     'Bills & Utilities': Icons.receipt_long,
-    'Rent & Housing': Icons.home,
-    'Loan & EMI': Icons.account_balance,
+    'Camera / Electronics': Icons.photo_camera,
+    'Camping': Icons.other_houses,
+    'Clothing & Fashion': Icons.checkroom,
     'Debt & Repayment': Icons.request_quote,
-    'Entertainment': Icons.movie,
-    'Gifts & Donations': Icons.card_giftcard,
-    'Sports & Fitness': Icons.fitness_center,
     'Education & Books': Icons.school,
+    'Entertainment': Icons.movie,
+    'Food & Dining': Icons.restaurant,
+    'Fuel & Petrol': Icons.local_gas_station,
+    'Gifts & Donations': Icons.card_giftcard,
+    'Groceries & Supplies': Icons.shopping_cart,
+    'Health & Medical': Icons.medical_services,
+    'Loan & EMI': Icons.account_balance,
+    'Luggage & Bags': Icons.work,
+    'Rent & Housing': Icons.home,
+    'Riding Gear': Icons.sports_motorsports,
+    'Safety & Protection': Icons.security,
     'Services & Repair': Icons.construction,
+    'Sports & Fitness': Icons.fitness_center,
+    'Travel & Hotels': Icons.hotel,
     'Other': Icons.category_outlined,
   };
 
@@ -102,6 +102,12 @@ class CategoryConstants {
   }
 
   static IconData getIcon(String category) {
+    if (_customIconsMap.containsKey(category)) {
+      final code = _customIconsMap[category]!;
+      for (final icon in selectableIcons) {
+        if (icon.codePoint == code) return icon;
+      }
+    }
     if (predefinedIcons.containsKey(category)) {
       return predefinedIcons[category]!;
     }
@@ -155,11 +161,24 @@ class CategoryManager {
       mergedSet.addAll(CategoryConstants.defaultCategories);
       mergedSet.addAll(savedList);
 
-      final mergedList = mergedSet.toList();
+      final mergedList = mergedSet.toList()
+        ..sort((a, b) {
+          if (a.toLowerCase() == 'other') return 1;
+          if (b.toLowerCase() == 'other') return -1;
+          return a.toLowerCase().compareTo(b.toLowerCase());
+        });
+
       await saveCategories(mergedList);
       return mergedList;
     } catch (_) {}
-    return List<String>.from(CategoryConstants.defaultCategories);
+
+    final list = List<String>.from(CategoryConstants.defaultCategories)
+      ..sort((a, b) {
+        if (a.toLowerCase() == 'other') return 1;
+        if (b.toLowerCase() == 'other') return -1;
+        return a.toLowerCase().compareTo(b.toLowerCase());
+      });
+    return list;
   }
 
   static Future<void> loadCategoryIcons(SharedPreferences prefs) async {
