@@ -47,6 +47,7 @@ class _PurchaseFormBottomSheetState
   late String _selectedGroupId;
   String? _selectedSubGroupId;
   late List<DateTime?> _unitDates;
+  late List<DateTime?> _savedUnitDates;
 
   @override
   void initState() {
@@ -87,6 +88,13 @@ class _PurchaseFormBottomSheetState
       return null;
     });
 
+    _savedUnitDates = List<DateTime?>.generate(initialQty, (index) {
+      if (item != null && index < item.purchaseDates.length) {
+        return item.purchaseDates[index];
+      }
+      return null;
+    });
+
     _unitPriceControllers = List<TextEditingController>.generate(initialQty, (index) {
       if (item != null &&
           index < item.unitActualPrices.length &&
@@ -117,6 +125,7 @@ class _PurchaseFormBottomSheetState
         if (newQty > _unitDates.length) {
           final diff = newQty - _unitDates.length;
           _unitDates.addAll(List.generate(diff, (_) => null));
+          _savedUnitDates.addAll(List.generate(diff, (_) => null));
           _unitPriceControllers.addAll(List.generate(diff, (_) => TextEditingController(text: '')));
         }
         _updateActualPriceFromUnits();
@@ -166,8 +175,8 @@ class _PurchaseFormBottomSheetState
     final mainActual = double.tryParse(mainActualText);
 
     if (qty == 1) {
-      if (mainActual != null && _unitDates.isNotEmpty && _unitDates[0] != null) {
-        return mainActual;
+      if (_unitDates.isNotEmpty && _unitDates[0] != null) {
+        return mainActual ?? plannedPrice;
       }
       return plannedPrice;
     }
@@ -182,15 +191,15 @@ class _PurchaseFormBottomSheetState
         final p = double.tryParse(pText);
         if (p != null) {
           actualSum += p;
+        } else if (mainActual != null) {
+          actualSum += mainActual;
         } else {
           actualSum += plannedPrice;
         }
-      } else {
-        actualSum += plannedPrice;
       }
     }
 
-    return boughtCount > 0 ? actualSum : qty * plannedPrice;
+    return boughtCount > 0 ? actualSum : 0.0;
   }
 
   void _submitForm() {
@@ -539,7 +548,7 @@ class _PurchaseFormBottomSheetState
                   value: _unitDates[0] != null,
                   onChanged: (val) {
                     setState(() {
-                      _unitDates[0] = val ? DateTime.now() : null;
+                      _unitDates[0] = val ? (_savedUnitDates[0] ?? DateTime.now()) : null;
                     });
                   },
                 ),
@@ -556,6 +565,7 @@ class _PurchaseFormBottomSheetState
                       if (picked != null) {
                         setState(() {
                           _unitDates[0] = picked;
+                          _savedUnitDates[0] = picked;
                         });
                       }
                     },
@@ -600,7 +610,7 @@ class _PurchaseFormBottomSheetState
                                   final allBought = purchasedUnitCount == _unitDates.length;
                                   _unitDates = List.generate(
                                     _unitDates.length,
-                                    (_) => allBought ? null : DateTime.now(),
+                                    (i) => allBought ? null : (_savedUnitDates[i] ?? DateTime.now()),
                                   );
                                   _updateActualPriceFromUnits();
                                 });
@@ -624,8 +634,9 @@ class _PurchaseFormBottomSheetState
                                   value: isBought,
                                   onChanged: (val) {
                                     setState(() {
-                                      _unitDates[index] =
-                                          val == true ? DateTime.now() : null;
+                                      _unitDates[index] = val == true
+                                          ? (_savedUnitDates[index] ?? DateTime.now())
+                                          : null;
                                       _updateActualPriceFromUnits();
                                     });
                                   },
@@ -653,6 +664,9 @@ class _PurchaseFormBottomSheetState
                                             if (picked != null) {
                                               setState(() {
                                                 _unitDates[index] = picked;
+                                                if (index < _savedUnitDates.length) {
+                                                  _savedUnitDates[index] = picked;
+                                                }
                                               });
                                             }
                                           },

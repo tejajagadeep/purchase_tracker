@@ -1373,8 +1373,8 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Unselect "${item.name}"?'),
-          content: Text(
-            'Unselecting this purchase will reset its recorded purchase status and dates. Are you sure you want to unselect?',
+          content: const Text(
+            'Are you sure you want to unselect this purchase item?',
           ),
           actions: [
             TextButton(
@@ -1393,15 +1393,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (confirm != true) return;
     }
 
-    List<DateTime> newDates;
-    if (isNowPurchased) {
-      if (item.purchasedQuantity > 0) {
-        newDates = item.purchaseDates;
-      } else {
-        newDates = List.generate(item.quantity, (_) => DateTime.now());
-      }
-    } else {
-      newDates = [];
+    // Preserve purchase dates across selecting and unselecting
+    List<DateTime> newDates = item.purchaseDates;
+    if (isNowPurchased && newDates.isEmpty) {
+      newDates = List.generate(item.quantity, (_) => DateTime.now());
     }
 
     final updatedItem = item.copyWith(
