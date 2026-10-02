@@ -1217,10 +1217,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double get effectiveGroupBudget {
     if (_activeSubGroup != null) {
-      return _activeSubGroup!.targetBudget ?? itemsPlannedTotal;
+      if (_activeSubGroup!.targetBudget != null && _activeSubGroup!.targetBudget! > 0) {
+        return _activeSubGroup!.targetBudget!;
+      }
+      return itemsPlannedTotal;
     }
     // Main Group View
-    if (_activeGroup?.targetBudget != null) {
+    if (_activeGroup?.targetBudget != null && _activeGroup!.targetBudget! > 0) {
       return _activeGroup!.targetBudget!;
     }
     if (_subGroups.isNotEmpty) {
@@ -1229,7 +1232,11 @@ class _HomeScreenState extends State<HomeScreen> {
       for (final sg in _subGroups) {
         final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
         final sgPlanned = sgItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
-        totalBudget += sg.targetBudget ?? sgPlanned;
+        if (sg.targetBudget != null && sg.targetBudget! > 0) {
+          totalBudget += sg.targetBudget!;
+        } else {
+          totalBudget += sgPlanned;
+        }
       }
       // 2. Add unassigned main group items planned total
       final unassignedItems = _items.where((i) => i.subGroupId == null).toList();

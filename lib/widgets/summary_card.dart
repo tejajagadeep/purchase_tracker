@@ -30,7 +30,10 @@ class SummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final double progress =
         totalCount == 0 ? 0.0 : purchasedCount / totalCount;
-    final effectiveBudget = groupTargetBudget ?? itemsPlannedTotal;
+    final bool hasValidGroupBudget =
+        groupTargetBudget != null && groupTargetBudget! > 0;
+    final effectiveBudget =
+        hasValidGroupBudget ? groupTargetBudget! : itemsPlannedTotal;
 
     return Container(
       decoration: BoxDecoration(
@@ -95,7 +98,7 @@ class SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    groupTargetBudget != null
+                    hasValidGroupBudget
                         ? 'Total Group Budget'
                         : 'Items Planned Total',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -132,7 +135,7 @@ class SummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (groupTargetBudget != null) ...[
+              if (hasValidGroupBudget) ...[
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
