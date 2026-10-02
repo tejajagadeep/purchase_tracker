@@ -307,9 +307,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         subtitle: Text(
-                          group.targetBudget != null
-                              ? 'Budget: ${formatCurrency(group.targetBudget!)}'
-                              : (group.description ?? 'No target budget set'),
+                          group.description != null && group.description!.isNotEmpty
+                              ? '${group.description!} • ${group.targetBudget != null ? 'Budget: ${formatCurrency(group.targetBudget!)}' : 'No target budget set'}'
+                              : (group.targetBudget != null
+                                  ? 'Budget: ${formatCurrency(group.targetBudget!)}'
+                                  : 'No target budget set'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -403,6 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAddGroupDialog() {
     final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
     final budgetController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -432,6 +437,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Group Description (Optional)',
+                  hintText: 'e.g. Trip to Leh & Ladakh',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
@@ -454,10 +469,12 @@ class _HomeScreenState extends State<HomeScreen> {
               if (formKey.currentState!.validate()) {
                 final budgetText = budgetController.text.trim();
                 final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+                final descText = descriptionController.text.trim();
 
                 final newGroup = PurchaseGroup(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   name: nameController.text.trim(),
+                  description: descText.isNotEmpty ? descText : null,
                   targetBudget: budget,
                 );
                 setState(() {
@@ -477,6 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showEditGroupDialog(PurchaseGroup group) {
     final nameController = TextEditingController(text: group.name);
+    final descriptionController = TextEditingController(text: group.description ?? '');
     final budgetController = TextEditingController(
       text: group.targetBudget != null ? group.targetBudget!.toStringAsFixed(0) : '',
     );
@@ -507,6 +525,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Group Description (Optional)',
+                  hintText: 'e.g. Trip to Leh & Ladakh',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
@@ -530,9 +558,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 final newName = nameController.text.trim();
                 final budgetText = budgetController.text.trim();
                 final double? budget = budgetText.isNotEmpty ? double.tryParse(budgetText) : null;
+                final descText = descriptionController.text.trim();
 
                 final updatedGroup = group.copyWith(
                   name: newName,
+                  description: descText.isNotEmpty ? descText : null,
                   targetBudget: budget,
                 );
                 final index = _groups.indexWhere((g) => g.id == group.id);
