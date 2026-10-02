@@ -37,6 +37,8 @@ class SummaryCard extends StatelessWidget {
     final double progress = budgetForProgress <= 0
         ? 0.0
         : (totalActualSpent / budgetForProgress).clamp(0.0, 1.0);
+    final bool isOverBudgetPlanned =
+        hasValidGroupBudget && itemsPlannedTotal > groupTargetBudget!;
 
     return Container(
       decoration: BoxDecoration(
@@ -142,18 +144,37 @@ class SummaryCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      'Items Planned',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onPrimary.withValues(alpha: 0.8),
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isOverBudgetPlanned) ...[
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            size: 14,
+                            color: Colors.amberAccent,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          'Items Planned',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isOverBudgetPlanned
+                                ? Colors.amberAccent
+                                : theme.colorScheme.onPrimary.withValues(alpha: 0.8),
+                            fontWeight: isOverBudgetPlanned
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       formatCurrency(itemsPlannedTotal),
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onPrimary,
+                        color: isOverBudgetPlanned
+                            ? Colors.amberAccent
+                            : theme.colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
