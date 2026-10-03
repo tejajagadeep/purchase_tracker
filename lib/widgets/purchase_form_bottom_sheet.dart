@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/categories.dart';
 import '../models/purchase_group.dart';
 import '../models/purchase_item.dart';
@@ -48,6 +49,11 @@ class _PurchaseFormBottomSheetState
   String? _selectedSubGroupId;
   late List<DateTime?> _unitDates;
   late List<DateTime?> _savedUnitDates;
+
+  final _priceInputFormatter = FilteringTextInputFormatter.allow(
+    RegExp(r'^\d{0,12}(\.\d{0,2})?'),
+  );
+  final _qtyInputFormatter = LengthLimitingTextInputFormatter(6);
 
   @override
   void initState() {
@@ -433,6 +439,10 @@ class _PurchaseFormBottomSheetState
                     child: TextFormField(
                       controller: _quantityController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        _qtyInputFormatter,
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Planned Qty *',
                         border: OutlineInputBorder(),
@@ -459,6 +469,7 @@ class _PurchaseFormBottomSheetState
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      inputFormatters: [_priceInputFormatter],
                       decoration: const InputDecoration(
                         labelText: 'Planned Price (₹) *',
                         hintText: '8000',
@@ -485,12 +496,13 @@ class _PurchaseFormBottomSheetState
 
               const SizedBox(height: 12),
 
-              // Line 3: Actual Price (Full Width)
+              // Line 3: Actual Price (Full Width, max 12 digits)
               TextFormField(
                 controller: _actualPriceController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [_priceInputFormatter],
                 decoration: const InputDecoration(
                   labelText: 'Actual Price (₹) (Optional)',
                   hintText: 'Leave empty if same as planned',
@@ -703,6 +715,7 @@ class _PurchaseFormBottomSheetState
                                   child: TextFormField(
                                     controller: _unitPriceControllers[index],
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    inputFormatters: [_priceInputFormatter],
                                     enabled: isBought,
                                     decoration: InputDecoration(
                                       labelText: 'Paid (₹)',

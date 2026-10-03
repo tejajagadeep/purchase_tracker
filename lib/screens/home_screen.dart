@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/categories.dart';
 import '../data/sample_data.dart';
 import '../models/purchase_item.dart';
@@ -55,6 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
 
   final TextEditingController _searchController = TextEditingController();
+  final _priceInputFormatter = FilteringTextInputFormatter.allow(
+    RegExp(r'^\d{0,12}(\.\d{0,2})?'),
+  );
 
   @override
   void initState() {
@@ -450,6 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_priceInputFormatter],
                 decoration: const InputDecoration(
                   labelText: 'Target Group Budget (₹) (Optional)',
                   hintText: 'e.g. 250000',
@@ -538,6 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_priceInputFormatter],
                 decoration: const InputDecoration(
                   labelText: 'Target Group Budget (₹) (Optional)',
                   hintText: 'e.g. 250000',
@@ -624,6 +630,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_priceInputFormatter],
                 decoration: const InputDecoration(
                   labelText: 'Target Sub-Group Budget (₹) (Optional)',
                   hintText: 'e.g. 50000',

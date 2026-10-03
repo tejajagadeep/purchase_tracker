@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/categories.dart';
 import '../models/purchase_group.dart';
 import '../models/purchase_item.dart';
@@ -130,6 +131,10 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                       child: TextFormField(
                         controller: qtyController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Qty *',
                           border: OutlineInputBorder(),
@@ -147,6 +152,11 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                       child: TextFormField(
                         controller: priceController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d{0,12}(\.\d{0,2})?'),
+                          ),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Planned Price (₹) *',
                           border: OutlineInputBorder(),
