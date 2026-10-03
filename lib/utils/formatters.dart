@@ -1,4 +1,40 @@
-/// Helper function to format currency according to Indian Rupees notation.
+import 'package:shared_preferences/shared_preferences.dart';
+
+class CurrencyManager {
+  static const String _currencyKey = 'app_currency_symbol_v1';
+  static String _currentSymbol = '₹';
+
+  static String get currentSymbol => _currentSymbol;
+
+  static const List<Map<String, String>> supportedCurrencies = [
+    {'symbol': '₹', 'name': 'Indian Rupee (₹)', 'code': 'INR'},
+    {'symbol': '\$', 'name': 'US Dollar (\$)', 'code': 'USD'},
+    {'symbol': '€', 'name': 'Euro (€)', 'code': 'EUR'},
+    {'symbol': '£', 'name': 'British Pound (£)', 'code': 'GBP'},
+    {'symbol': '¥', 'name': 'Japanese Yen (¥)', 'code': 'JPY'},
+    {'symbol': 'A\$', 'name': 'Australian Dollar (A\$)', 'code': 'AUD'},
+    {'symbol': 'C\$', 'name': 'Canadian Dollar (C\$)', 'code': 'CAD'},
+    {'symbol': 'AED', 'name': 'UAE Dirham (AED)', 'code': 'AED'},
+  ];
+
+  static Future<String> loadCurrencySymbol() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _currentSymbol = prefs.getString(_currencyKey) ?? '₹';
+    } catch (_) {}
+    return _currentSymbol;
+  }
+
+  static Future<void> saveCurrencySymbol(String symbol) async {
+    try {
+      _currentSymbol = symbol;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_currencyKey, symbol);
+    } catch (_) {}
+  }
+}
+
+/// Helper function to format currency according to selected currency symbol notation.
 String formatCurrency(double amount) {
   final isNegative = amount < 0;
   final absAmount = amount.abs();
@@ -31,7 +67,8 @@ String formatCurrency(double amount) {
     result = '$result.$decStr';
   }
 
-  return '${isNegative ? '- ' : ''}₹$result';
+  final symbol = CurrencyManager.currentSymbol;
+  return '${isNegative ? '- ' : ''}$symbol$result';
 }
 
 /// Helper function to format numbers for form text inputs without rounding off decimals.

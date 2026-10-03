@@ -30,6 +30,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
 
   Future<void> _loadTemplates() async {
     try {
+      await CurrencyManager.loadCurrencySymbol();
       final loadedCategories = await CategoryManager.loadCategories();
       var groups = await _repository.getTemplateGroups();
 
@@ -157,9 +158,9 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                             RegExp(r'^\d{0,12}(\.\d{0,2})?'),
                           ),
                         ],
-                        decoration: const InputDecoration(
-                          labelText: 'Planned Price (₹) *',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
+                          border: const OutlineInputBorder(),
                         ),
                         validator: (value) {
                           final p = double.tryParse(value ?? '');

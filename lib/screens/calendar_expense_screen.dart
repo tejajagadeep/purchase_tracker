@@ -26,6 +26,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
   }
 
   Future<void> _loadItems() async {
+    await CurrencyManager.loadCurrencySymbol();
     final items = await _repository.getItems();
     setState(() {
       _allItems = items;
@@ -345,7 +346,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                                 if (daySpent > 0)
                                   FittedBox(
                                     child: Text(
-                                      '₹${daySpent.toStringAsFixed(0)}',
+                                      formatCurrency(daySpent),
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold,

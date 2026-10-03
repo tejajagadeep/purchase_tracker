@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     try {
+      await CurrencyManager.loadCurrencySymbol();
       final loadedCategories = await CategoryManager.loadCategories();
       final loadedGroups = await _repository.getGroups();
       final activeGroup = loadedGroups.firstWhere(
@@ -455,11 +456,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [_priceInputFormatter],
-                decoration: const InputDecoration(
-                  labelText: 'Target Group Budget (₹) (Optional)',
+                decoration: InputDecoration(
+                  labelText: 'Target Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 250000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
               ),
             ],
@@ -544,11 +545,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [_priceInputFormatter],
-                decoration: const InputDecoration(
-                  labelText: 'Target Group Budget (₹) (Optional)',
+                decoration: InputDecoration(
+                  labelText: 'Target Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 250000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
               ),
             ],
@@ -631,11 +632,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: budgetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [_priceInputFormatter],
-                decoration: const InputDecoration(
-                  labelText: 'Target Sub-Group Budget (₹) (Optional)',
+                decoration: InputDecoration(
+                  labelText: 'Target Sub-Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 50000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
               ),
             ],
@@ -784,7 +785,78 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showCurrencySettingsDialog() {
+    String current = CurrencyManager.currentSymbol;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.currency_exchange, color: Colors.blue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Select Currency Symbol',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: CurrencyManager.supportedCurrencies.map((c) {
+                final symbol = c['symbol']!;
+                final name = c['name']!;
+                final isSelected = current == symbol;
+                return RadioListTile<String>(
+                  value: symbol,
+                  groupValue: current,
+                  title: Text(
+                    name,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() {
+                        current = val;
+                      });
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                await CurrencyManager.saveCurrencySymbol(current);
+                setState(() {});
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Currency symbol updated to "${CurrencyManager.currentSymbol}"'),
+                  ),
+                );
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showCopyFromTemplateDialog({String? preSelectedSubGroupId}) async {
+    await CurrencyManager.loadCurrencySymbol();
     final templateGroups = await _repository.getTemplateGroups();
     if (templateGroups.isEmpty) return;
 
@@ -1593,7 +1665,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'calendar') {
+              if (value == 'currency_settings') {
+                _showCurrencySettingsDialog();
+              } else if (value == 'calendar') {
                 _openCalendarView();
               } else if (value == 'copy_template') {
                 _showCopyFromTemplateDialog();
@@ -1615,6 +1689,16 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'currency_settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.currency_exchange, size: 20),
+                    SizedBox(width: 8),
+                    Text('Currency Settings'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'copy_template',
                 child: Row(

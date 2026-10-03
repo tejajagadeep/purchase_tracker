@@ -470,11 +470,11 @@ class _PurchaseFormBottomSheetState
                         decimal: true,
                       ),
                       inputFormatters: [_priceInputFormatter],
-                      decoration: const InputDecoration(
-                        labelText: 'Planned Price (₹) *',
+                      decoration: InputDecoration(
+                        labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
                         hintText: '8000',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.currency_rupee),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.attach_money),
                       ),
                       onChanged: (_) {
                         _updateActualPriceFromUnits();
@@ -503,11 +503,11 @@ class _PurchaseFormBottomSheetState
                   decimal: true,
                 ),
                 inputFormatters: [_priceInputFormatter],
-                decoration: const InputDecoration(
-                  labelText: 'Actual Price (₹) (Optional)',
+                decoration: InputDecoration(
+                  labelText: 'Actual Price (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'Leave empty if same as planned',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.sell_outlined),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.sell_outlined),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
