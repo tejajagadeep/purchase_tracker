@@ -616,12 +616,16 @@ class _PurchaseFormBottomSheetState
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Unit Purchases ($purchasedUnitCount of ${_unitDates.length} Bought)',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                'Unit Purchases ($purchasedUnitCount of ${_unitDates.length} Bought)',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             TextButton(
                               onPressed: () {
                                 setState(() {
