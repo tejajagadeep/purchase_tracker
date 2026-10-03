@@ -208,7 +208,9 @@ class _PurchaseFormBottomSheetState
           ? (boughtCount > 0 ? sumUnitPrices / boughtCount : null)
           : actualPriceInput;
 
-      final bool isCompletedVal = validDates.length >= qty || (_unitDates.isNotEmpty && _unitDates[0] != null);
+      final bool isCompletedVal = qty == 1
+          ? (_unitDates.isNotEmpty && _unitDates[0] != null)
+          : (validDates.length >= qty);
 
       final newItem = PurchaseItem(
         id: widget.existingItem?.id ??
