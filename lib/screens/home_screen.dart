@@ -1460,10 +1460,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return false;
       }
 
-      if (_statusFilter == StatusFilter.purchased && !item.isPurchased) {
+      final bool itemBought = item.purchasedQuantity > 0 || item.isCompleted;
+      if (_statusFilter == StatusFilter.purchased && !itemBought) {
         return false;
       }
-      if (_statusFilter == StatusFilter.pending && item.isPurchased) {
+      if (_statusFilter == StatusFilter.pending && itemBought) {
         return false;
       }
 
@@ -2140,7 +2141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final sg = _subGroups[index];
-                            final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
+                            final sgItems = _filteredAndSortedItems.where((i) => i.subGroupId == sg.id).toList();
                             return SubGroupCard(
                               subGroup: sg,
                               items: sgItems,
@@ -2160,7 +2161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     // Unassigned Main Items Section (if any exist without subgroup)
-                    if (_items.any((i) => i.subGroupId == null)) ...[
+                    if (_filteredAndSortedItems.any((i) => i.subGroupId == null)) ...[
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -2175,7 +2176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            final unassignedItems = _items.where((i) => i.subGroupId == null).toList();
+                            final unassignedItems = _filteredAndSortedItems.where((i) => i.subGroupId == null).toList();
                             final item = unassignedItems[index];
                             return Padding(
                               padding: const EdgeInsets.symmetric(
@@ -2190,7 +2191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          childCount: _items.where((i) => i.subGroupId == null).length,
+                          childCount: _filteredAndSortedItems.where((i) => i.subGroupId == null).length,
                         ),
                       ),
                     ],
