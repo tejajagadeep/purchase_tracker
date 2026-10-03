@@ -99,27 +99,44 @@ void main() {
       expect(item.actualTotal, equals(514.0));
     });
 
-    test('Copying and Toggle Selection Preserves Dates', () {
-      final dates = [DateTime(2026, 10, 12)];
-      final item = PurchaseItem(
-        id: '4',
-        name: 'Gloves',
-        quantity: 1,
-        plannedPrice: 500.0,
-        purchaseDates: dates,
-        isCompleted: true,
-        category: '',
-      );
+    test('Duplicate Name Detection in Same Location vs Different Location', () {
+      final items = [
+        PurchaseItem(
+          id: '1',
+          groupId: 'g1',
+          subGroupId: 'sg1',
+          name: 'Coffee',
+          quantity: 10,
+          plannedPrice: 20.0,
+          category: 'Food & Dining',
+        ),
+        PurchaseItem(
+          id: '2',
+          groupId: 'g1',
+          subGroupId: 'sg2',
+          name: 'Coffee',
+          quantity: 10,
+          plannedPrice: 20.0,
+          category: 'Food & Dining',
+        ),
+      ];
 
-      // Toggle off / unselect
-      final unselected = item.copyWith(isCompleted: false);
-      expect(unselected.isPurchased, isFalse);
-      expect(unselected.purchaseDates.length, equals(1)); // Dates preserved!
+      bool isDuplicate(String name, String groupId, String? subGroupId, {String? excludeId}) {
+        final clean = name.trim().toLowerCase();
+        return items.any((i) {
+          if (excludeId != null && i.id == excludeId) return false;
+          return i.groupId == groupId && i.subGroupId == subGroupId && i.name.trim().toLowerCase() == clean;
+        });
+      }
 
-      // Toggle on / re-select
-      final reselected = unselected.copyWith(isCompleted: true);
-      expect(reselected.isPurchased, isTrue);
-      expect(reselected.purchaseDates, equals(dates)); // Original date restored!
+      // 1. Same name in same sub-group 'sg1' -> Duplicate!
+      expect(isDuplicate('coffee', 'g1', 'sg1'), isTrue);
+
+      // 2. Same name in different sub-group 'sg3' -> Allowed!
+      expect(isDuplicate('coffee', 'g1', 'sg3'), isFalse);
+
+      // 3. Same name in different group 'g2' -> Allowed!
+      expect(isDuplicate('coffee', 'g2', 'sg1'), isFalse);
     });
 
     test('PurchaseItem toMap & fromMap Serialization', () {

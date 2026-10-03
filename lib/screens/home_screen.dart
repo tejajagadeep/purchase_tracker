@@ -1091,16 +1091,38 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_activeGroup == null || itemsToCopy.isEmpty) return;
 
     final messenger = ScaffoldMessenger.of(context);
+
+    // Filter out items whose names already exist in the target group/sub-group
+    final existingNamesInTarget = _items
+        .where((i) => i.groupId == _activeGroup!.id && i.subGroupId == targetSubGroupId)
+        .map((i) => i.name.trim().toLowerCase())
+        .toSet();
+
+    final nonDuplicateItems = itemsToCopy.where((item) {
+      return !existingNamesInTarget.contains(item.name.trim().toLowerCase());
+    }).toList();
+
+    final skippedCount = itemsToCopy.length - nonDuplicateItems.length;
+
+    if (nonDuplicateItems.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('All selected template items already exist in the target list.'),
+        ),
+      );
+      return;
+    }
+
     final List<String> newlyAddedIds = [];
 
-    final copiedItems = itemsToCopy.map((item) {
+    final copiedItems = nonDuplicateItems.map((item) {
       final newId = '${DateTime.now().microsecondsSinceEpoch}_${newlyAddedIds.length}';
       newlyAddedIds.add(newId);
       return item.copyWith(
         id: newId,
         groupId: _activeGroup!.id,
         subGroupId: targetSubGroupId,
-        purchaseDates: [], // Reset to pending for fresh list
+        purchaseDates: [],
       );
     }).toList();
 
@@ -1117,10 +1139,14 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+    final String message = skippedCount > 0
+        ? 'Copied ${copiedItems.length} items into "$destName" ($skippedCount duplicate${skippedCount > 1 ? 's' : ''} skipped)!'
+        : 'Copied ${copiedItems.length} template items into "$destName"!';
+
     messenger.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 6),
-        content: Text('Copied ${copiedItems.length} template items into "$destName"!'),
+        duration: const Duration(seconds: 5),
+        content: Text(message),
         action: SnackBarAction(
           label: 'UNDO',
           onPressed: () async {
@@ -1128,9 +1154,6 @@ class _HomeScreenState extends State<HomeScreen> {
               _items.removeWhere((item) => newlyAddedIds.contains(item.id));
             });
             await _saveItems();
-            messenger.showSnackBar(
-              const SnackBar(content: Text('Reverted template copy!')),
-            );
           },
         ),
       ),
@@ -1550,6 +1573,7 @@ class _HomeScreenState extends State<HomeScreen> {
           categories: _categories,
           groups: _groups,
           allSubGroups: _subGroups,
+          allItems: _items,
           groupId: _activeGroup?.id ?? 'bike_touring',
           subGroupId: _activeSubGroup?.id,
           onSave: (newItem) async {

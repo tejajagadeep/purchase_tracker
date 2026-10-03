@@ -11,6 +11,7 @@ class PurchaseFormBottomSheet extends StatefulWidget {
   final List<String> categories;
   final List<PurchaseGroup>? groups;
   final List<SubGroup>? allSubGroups;
+  final List<PurchaseItem>? allItems;
   final String groupId;
   final String? subGroupId;
   final ValueChanged<PurchaseItem> onSave;
@@ -22,6 +23,7 @@ class PurchaseFormBottomSheet extends StatefulWidget {
     required this.categories,
     this.groups,
     this.allSubGroups,
+    this.allItems,
     this.groupId = 'bike_touring',
     this.subGroupId,
     required this.onSave,
@@ -176,6 +178,43 @@ class _PurchaseFormBottomSheetState
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
+      final cleanName = _nameController.text.trim();
+      final lowerName = cleanName.toLowerCase();
+
+      if (widget.allItems != null) {
+        final isDuplicate = widget.allItems!.any((i) {
+          if (widget.existingItem != null && i.id == widget.existingItem!.id) {
+            return false;
+          }
+          final sameGroup = i.groupId == _selectedGroupId;
+          final sameSubGroup = i.subGroupId == _selectedSubGroupId;
+          final sameName = i.name.trim().toLowerCase() == lowerName;
+          return sameGroup && sameSubGroup && sameName;
+        });
+
+        if (isDuplicate) {
+          String listName = 'this list';
+          if (_selectedSubGroupId != null && widget.allSubGroups != null) {
+            final match = widget.allSubGroups!.where((sg) => sg.id == _selectedSubGroupId);
+            if (match.isNotEmpty) {
+              listName = '"${match.first.name}"';
+            }
+          } else if (widget.groups != null) {
+            final match = widget.groups!.where((g) => g.id == _selectedGroupId);
+            if (match.isNotEmpty) {
+              listName = '"${match.first.name}"';
+            }
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('An item named "$cleanName" already exists in $listName.'),
+            ),
+          );
+          return;
+        }
+      }
+
       final qty = int.parse(_quantityController.text);
       final plannedPrice = double.parse(_plannedPriceController.text);
       final actualPriceText = _actualPriceController.text.trim();

@@ -218,6 +218,22 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
           FilledButton(
             onPressed: () async {
               if (formKey.currentState!.validate() && _selectedTemplate != null) {
+                final cleanName = nameController.text.trim();
+                final lowerName = cleanName.toLowerCase();
+
+                final isDuplicate = _templateItems.any(
+                  (i) => i.name.trim().toLowerCase() == lowerName,
+                );
+
+                if (isDuplicate) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('An item named "$cleanName" already exists in this template preset.'),
+                    ),
+                  );
+                  return;
+                }
+
                 final qty = int.parse(qtyController.text.trim());
                 final price = double.parse(priceController.text.trim());
                 final notesText = notesController.text.trim();
@@ -225,7 +241,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                 final newItem = PurchaseItem(
                   id: DateTime.now().microsecondsSinceEpoch.toString(),
                   groupId: _selectedTemplate!.id,
-                  name: nameController.text.trim(),
+                  name: cleanName,
                   quantity: qty,
                   plannedPrice: price,
                   category: category,
