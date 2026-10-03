@@ -95,7 +95,7 @@ class SubGroupCard extends StatelessWidget {
                               if (subGroup.targetBudget != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Target Budget',
+                                  'Sub Budget',
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.outline,
                                     fontSize: 10,
@@ -190,34 +190,7 @@ class SubGroupCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saved',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            formatCurrency(saved),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: saved >= 0 ? Colors.green.shade700 : Colors.orange.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 4),
+                  // Column 1: Spent
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,9 +219,11 @@ class SubGroupCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
+
+                  // Column 2: Remaining
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           'Remaining',
@@ -261,11 +236,41 @@ class SubGroupCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         FittedBox(
                           fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.center,
                           child: Text(
                             formatCurrency(remaining),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+
+                  // Column 3: Saved
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Saved',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            formatCurrency(saved),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: saved >= 0 ? Colors.green.shade700 : Colors.orange.shade700,
                             ),
                           ),
                         ),
