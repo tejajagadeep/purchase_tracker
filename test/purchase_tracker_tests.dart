@@ -360,7 +360,7 @@ void main() {
 
       expect(find.text('October 2026 Sub-Group'), findsOneWidget);
       expect(find.text('1 of 1 bought'), findsOneWidget);
-      expect(find.text('Target Budget'), findsOneWidget);
+      expect(find.text('Sub Budget'), findsOneWidget);
       expect(find.text('Spent'), findsOneWidget);
       expect(find.text('Remaining'), findsOneWidget);
       expect(find.text('Saved'), findsOneWidget);
