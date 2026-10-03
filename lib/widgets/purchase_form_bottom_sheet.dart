@@ -66,12 +66,12 @@ class _PurchaseFormBottomSheetState
     _quantityController =
         TextEditingController(text: initialQty.toString());
     _plannedPriceController = TextEditingController(
-      text: item != null ? item.plannedPrice.toStringAsFixed(0) : '',
+      text: item != null ? formatPriceForInput(item.plannedPrice) : '',
     );
 
     _actualPriceController = TextEditingController(
       text: item?.actualPrice != null
-          ? (initialQty > 1 ? item!.actualTotal.toStringAsFixed(0) : item!.actualPrice!.toStringAsFixed(0))
+          ? (initialQty > 1 ? formatPriceForInput(item!.actualTotal) : formatPriceForInput(item!.actualPrice!))
           : '',
     );
 
@@ -105,7 +105,7 @@ class _PurchaseFormBottomSheetState
       if (item != null &&
           index < item.unitActualPrices.length &&
           item.unitActualPrices[index] != null) {
-        return TextEditingController(text: item.unitActualPrices[index]!.toStringAsFixed(0));
+        return TextEditingController(text: formatPriceForInput(item.unitActualPrices[index]!));
       }
       return TextEditingController(text: '');
     });
@@ -159,7 +159,7 @@ class _PurchaseFormBottomSheetState
         }
       }
       if (boughtCount > 0) {
-        _actualPriceController.text = sum.toStringAsFixed(0);
+        _actualPriceController.text = formatPriceForInput(sum);
       } else {
         _actualPriceController.text = '';
       }

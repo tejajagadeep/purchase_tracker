@@ -502,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final nameController = TextEditingController(text: group.name);
     final descriptionController = TextEditingController(text: group.description ?? '');
     final budgetController = TextEditingController(
-      text: group.targetBudget != null ? group.targetBudget!.toStringAsFixed(0) : '',
+      text: group.targetBudget != null ? formatPriceForInput(group.targetBudget!) : '',
     );
     final formKey = GlobalKey<FormState>();
 
@@ -680,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showEditSubGroupDialog(SubGroup subGroup) {
     final nameController = TextEditingController(text: subGroup.name);
     final budgetController = TextEditingController(
-      text: subGroup.targetBudget != null ? subGroup.targetBudget!.toStringAsFixed(0) : '',
+      text: subGroup.targetBudget != null ? formatPriceForInput(subGroup.targetBudget!) : '',
     );
     bool isPinned = subGroup.isPinned;
     final formKey = GlobalKey<FormState>();
