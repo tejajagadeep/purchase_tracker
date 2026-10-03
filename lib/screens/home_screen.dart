@@ -1497,6 +1497,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
+                            label: 'Items Planned Remaining',
+                            value: formatCurrency(itemsPlannedRemaining),
+                            icon: Icons.shopping_basket_outlined,
+                            color: Colors.blue.shade800,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
                             label: 'Total Actual Spent',
                             value: formatCurrency(totalActualSpent),
                             icon: Icons.check_circle_outline,
@@ -1761,6 +1769,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double get itemsPlannedTotal {
     return _effectiveGroupItems.fold(0.0, (sum, item) => sum + item.plannedTotal);
+  }
+
+  double get itemsPlannedRemaining {
+    double remaining = 0.0;
+    for (final item in _effectiveGroupItems) {
+      if (item.isCompleted) continue;
+      final int unboughtQty = item.quantity - item.purchasedQuantity;
+      if (unboughtQty > 0) {
+        remaining += unboughtQty * item.plannedPrice;
+      }
+    }
+    return remaining;
   }
 
   double get effectiveGroupBudget {
