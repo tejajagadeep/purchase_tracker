@@ -1849,105 +1849,112 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_subGroups.isNotEmpty) ...[
                     SliverToBoxAdapter(
                       child: Container(
-                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         margin: const EdgeInsets.only(top: 8.0),
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          itemCount: _subGroups.length + 3,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              final isSelected = _activeSubGroup == null;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ChoiceChip(
-                                  showCheckmark: false,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  labelPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 0,
-                                  ),
-                                  label: const Text(
-                                    'All Months/Groups',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  selected: isSelected,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _activeSubGroup = null;
-                                    });
-                                  },
-                                ),
-                              );
-                            }
-
-                            if (index <= _subGroups.length) {
-                              final sg = _subGroups[index - 1];
-                              final isSelected = _activeSubGroup?.id == sg.id;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ChoiceChip(
-                                  showCheckmark: false,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  labelPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 0,
-                                  ),
-                                  label: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (sg.isPinned) ...[
-                                        const Icon(
-                                          Icons.push_pin,
-                                          size: 14,
-                                          color: Colors.orange,
+                        child: Row(
+                          children: [
+                            // 1. Horizontally Scrollable Month Choice Chips
+                            Expanded(
+                              child: SizedBox(
+                                height: 38,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _subGroups.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      final isSelected = _activeSubGroup == null;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8.0),
+                                        child: ChoiceChip(
+                                          showCheckmark: false,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                          labelPadding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 0,
+                                          ),
+                                          label: const Text(
+                                            'All Months/Groups',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          selected: isSelected,
+                                          onSelected: (_) {
+                                            setState(() {
+                                              _activeSubGroup = null;
+                                            });
+                                          },
                                         ),
-                                        const SizedBox(width: 4),
-                                      ],
-                                      Text(
-                                        sg.name,
-                                        textAlign: TextAlign.center,
+                                      );
+                                    }
+
+                                    final sg = _subGroups[index - 1];
+                                    final isSelected = _activeSubGroup?.id == sg.id;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8.0),
+                                      child: ChoiceChip(
+                                        showCheckmark: false,
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        labelPadding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 0,
+                                        ),
+                                        label: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (sg.isPinned) ...[
+                                              const Icon(
+                                                Icons.push_pin,
+                                                size: 14,
+                                                color: Colors.orange,
+                                              ),
+                                              const SizedBox(width: 4),
+                                            ],
+                                            Text(
+                                              sg.name,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                        selected: isSelected,
+                                        onSelected: (_) {
+                                          setState(() {
+                                            _activeSubGroup = sg;
+                                          });
+                                        },
                                       ),
-                                    ],
-                                  ),
-                                  selected: isSelected,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _activeSubGroup = sg;
-                                    });
+                                    );
                                   },
                                 ),
-                              );
-                            }
+                              ),
+                            ),
 
-                            if (index == _subGroups.length + 1) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ActionChip(
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  avatar: const Icon(Icons.copy_outlined, size: 16),
-                                  label: const Text('Copy Template'),
+                            const SizedBox(width: 8),
+
+                            // 2. Neat Action Buttons on the Right
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton.filledTonal(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                  icon: const Icon(Icons.copy_outlined, size: 18),
+                                  tooltip: 'Copy Template into Sub-Group',
                                   onPressed: () => _showCopyFromTemplateDialog(
                                     preSelectedSubGroupId: _activeSubGroup?.id,
                                   ),
                                 ),
-                              );
-                            }
-
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ActionChip(
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                                avatar: const Icon(Icons.add_circle_outline, size: 16),
-                                label: const Text('Add Month'),
-                                onPressed: _showAddSubGroupDialog,
-                              ),
-                            );
-                          },
+                                const SizedBox(width: 6),
+                                IconButton.filled(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                  icon: const Icon(Icons.add, size: 18),
+                                  tooltip: 'Add Sub-Group / Month',
+                                  onPressed: _showAddSubGroupDialog,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
