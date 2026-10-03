@@ -461,7 +461,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   labelText: 'Target Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 250000',
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.attach_money),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      CurrencyManager.currentSymbol,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -550,7 +559,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   labelText: 'Target Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 250000',
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.attach_money),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      CurrencyManager.currentSymbol,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -637,7 +655,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   labelText: 'Target Sub-Group Budget (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'e.g. 50000',
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.attach_money),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      CurrencyManager.currentSymbol,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -474,7 +474,16 @@ class _PurchaseFormBottomSheetState
                         labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
                         hintText: '8000',
                         border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.attach_money),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            CurrencyManager.currentSymbol,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
                       ),
                       onChanged: (_) {
                         _updateActualPriceFromUnits();
@@ -507,7 +516,16 @@ class _PurchaseFormBottomSheetState
                   labelText: 'Actual Price (${CurrencyManager.currentSymbol}) (Optional)',
                   hintText: 'Leave empty if same as planned',
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.sell_outlined),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      CurrencyManager.currentSymbol,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
                 onChanged: (_) => setState(() {}),
               ),

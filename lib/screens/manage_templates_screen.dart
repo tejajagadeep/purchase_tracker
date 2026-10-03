@@ -161,6 +161,16 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
                         decoration: InputDecoration(
                           labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
                           border: const OutlineInputBorder(),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              CurrencyManager.currentSymbol,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
                         ),
                         validator: (value) {
                           final p = double.tryParse(value ?? '');
