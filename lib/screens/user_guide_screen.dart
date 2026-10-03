@@ -92,7 +92,12 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Pin & Complete Toggles',
                   detail:
-                      'Tap the pin icon on any group or sub-group card to pin it to the top. Tap the checkmark button to mark a sub-group as done when completed.',
+                      'Tap the pin icon on any group or sub-group card to pin it to the top. Tap the edit or delete button on sub-group cards to manage them.',
+                ),
+                _GuideStep(
+                  title: 'Sub-Group Card Metrics',
+                  detail:
+                      'Sub-group cards display Target Budget, Spent, Remaining, and Saved metrics along with a bought items counter.',
                 ),
               ],
             ),
@@ -110,7 +115,12 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Add New Purchase (+)',
                   detail:
-                      'Tap the "+ Add Purchase" floating action button. Enter Item Name, Planned Quantity, and Planned Price ($symbol).',
+                      'Tap the "+ Add Purchase" floating action button. Enter Item Name, Planned Quantity, and Planned Price ($symbol). Max 12-digit prices supported with full decimal precision (e.g., ${symbol}49.50).',
+                ),
+                _GuideStep(
+                  title: 'Duplicate Name Protection',
+                  detail:
+                      'You cannot add, rename, or move an item to a name that already exists in the same Group or Sub-Group list. Same item names are allowed in different sub-groups!',
                 ),
                 _GuideStep(
                   title: 'Multi-Quantity Unit Purchases',
@@ -123,9 +133,14 @@ class UserGuideScreen extends StatelessWidget {
                       'Tap the blue "+" button on any dashboard item tile to record 1 unit as bought today with a single tap!',
                 ),
                 _GuideStep(
-                  title: 'Safe Unselecting & Deleting',
+                  title: 'Selection & Date Preservation',
                   detail:
-                      'Unselecting a checked item prompts a confirmation dialog so you never lose your data by accident. Deleting an item also prompts for confirmation.',
+                      'Unselecting a checked item keeps all your recorded purchase dates and custom unit prices safely in memory so re-selecting restores them instantly.',
+                ),
+                _GuideStep(
+                  title: 'Auto-Check Completion Rules',
+                  detail:
+                      'Single-quantity items auto-check when "Mark as Purchased" is ON. Multi-quantity items auto-check on save ONLY when ALL quantity units are checked/bought.',
                 ),
               ],
             ),
@@ -146,6 +161,16 @@ class UserGuideScreen extends StatelessWidget {
                       'Shows Total Group Budget, Items Planned, Actual Spent, Remaining Budget, and Total Saved ($symbol).',
                 ),
                 _GuideStep(
+                  title: 'Immediate Spent Calculation',
+                  detail:
+                      'Recording unit purchases or entering actual prices updates Spent and Remaining Budget amounts immediately.',
+                ),
+                _GuideStep(
+                  title: 'Saved Amount Rule',
+                  detail:
+                      'Saved Amount ($symbol) is calculated ONLY when the item card checkmark is CHECKED (isPurchased = true). Unchecked items do not add to Saved until marked completed.',
+                ),
+                _GuideStep(
                   title: 'Progress Bar Completion',
                   detail:
                       'The progress bar fills dynamically based on your Actual Spent vs. Total Planned Budget (e.g., spending ${symbol}50,000 out of ${symbol}1,00,000 fills the bar 50%).',
@@ -158,7 +183,7 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Currency Settings',
                   detail:
-                      'Go to Menu > Currency Settings to change your currency symbol anytime ($symbol, \$, €, £, ¥, AED, etc.).',
+                      'Go to Menu > Currency Settings to change your currency symbol anytime ($symbol, \$, €, £, ¥, AED, etc.). Input field icons update dynamically to match.',
                 ),
               ],
             ),
@@ -181,7 +206,7 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Daily Spending Breakdown',
                   detail:
-                      'Days with purchases display the exact amount spent in green. Tap any date on the grid to inspect the itemized purchases bought on that day.',
+                      'Days with purchases display the exact amount spent in green using your selected currency symbol. Tap any date on the grid to inspect itemized purchases bought on that day.',
                 ),
               ],
             ),
@@ -204,7 +229,7 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Copy Items from Template',
                   detail:
-                      'Tap "Copy Items from Template" in the top menu or on a sub-group card. Select items and tap Copy to copy them into your active group or sub-group.',
+                      'Tap "Copy Items from Template" in the top menu or on a sub-group card. Select items and tap Copy to copy them into your active group or sub-group. Duplicate item names are automatically skipped!',
                 ),
               ],
             ),
@@ -225,9 +250,14 @@ class UserGuideScreen extends StatelessWidget {
                       'Go to Menu > Backup & Restore Data > Save Backup File to prompt location selection and save a JSON backup file on your device or Google Drive.',
                 ),
                 _GuideStep(
-                  title: 'Restore or Merge Data',
+                  title: 'Merge Backup Data',
                   detail:
-                      'Tap Restore / Import Backup File to select a JSON backup file and restore or merge your data anytime.',
+                      'Select "Merge Data" when importing a backup file to seamlessly combine new groups, sub-groups, items, and custom categories with your current data without deleting anything!',
+                ),
+                _GuideStep(
+                  title: 'Replace Backup Data',
+                  detail:
+                      'Select "Replace Data" to overwrite current data with a backup file. A safety warning dialog prompts you to confirm before replacing any data.',
                 ),
               ],
             ),
