@@ -179,31 +179,79 @@ class BackupService {
       }
 
       if (merge) {
-        final existingGroups = await _repository.getGroups(includeTemplates: true);
-        final existingSubGroups = await _repository.getSubGroups();
-        final existingItems = await _repository.getItems();
+        final existingGroups = List<PurchaseGroup>.from(await _repository.getGroups(includeTemplates: true));
+        final existingSubGroups = List<SubGroup>.from(await _repository.getSubGroups());
+        final existingItems = List<PurchaseItem>.from(await _repository.getItems());
         final existingCategories = await CategoryManager.loadCategories();
 
-        final mergedGroupsMap = {for (final g in existingGroups) g.id: g};
-        for (final g in newGroups) {
-          mergedGroupsMap[g.id] = g;
+        // 1. Merge Groups
+        final Map<String, String> groupIdMap = {};
+        for (final newG in newGroups) {
+          final cleanName = newG.name.trim().toLowerCase();
+          final match = existingGroups.where((g) => g.name.trim().toLowerCase() == cleanName);
+          if (match.isNotEmpty) {
+            groupIdMap[newG.id] = match.first.id;
+          } else {
+            final freshGroup = newG.copyWith(
+              id: 'group_${DateTime.now().microsecondsSinceEpoch}_${groupIdMap.length}',
+            );
+            existingGroups.add(freshGroup);
+            groupIdMap[newG.id] = freshGroup.id;
+          }
         }
 
-        final mergedSubGroupsMap = {for (final sg in existingSubGroups) sg.id: sg};
-        for (final sg in newSubGroups) {
-          mergedSubGroupsMap[sg.id] = sg;
+        // 2. Merge Sub-Groups
+        final Map<String, String> subGroupIdMap = {};
+        for (final newSg in newSubGroups) {
+          final cleanName = newSg.name.trim().toLowerCase();
+          final targetGroupId = groupIdMap[newSg.groupId] ?? newSg.groupId;
+
+          final match = existingSubGroups.where(
+            (sg) => sg.groupId == targetGroupId && sg.name.trim().toLowerCase() == cleanName,
+          );
+
+          if (match.isNotEmpty) {
+            subGroupIdMap[newSg.id] = match.first.id;
+          } else {
+            final freshSubGroup = newSg.copyWith(
+              id: 'subgroup_${DateTime.now().microsecondsSinceEpoch}_${subGroupIdMap.length}',
+              groupId: targetGroupId,
+            );
+            existingSubGroups.add(freshSubGroup);
+            subGroupIdMap[newSg.id] = freshSubGroup.id;
+          }
         }
 
-        final mergedItemsMap = {for (final i in existingItems) i.id: i};
-        for (final i in newItems) {
-          mergedItemsMap[i.id] = i;
+        // 3. Merge Items
+        final Set<String> existingItemKeys = existingItems.map((i) {
+          return '${i.groupId}_${i.subGroupId}_${i.name.trim().toLowerCase()}';
+        }).toSet();
+
+        int freshItemCounter = 0;
+        for (final newItem in newItems) {
+          final targetGroupId = groupIdMap[newItem.groupId] ?? newItem.groupId;
+          final targetSubGroupId = newItem.subGroupId != null
+              ? (subGroupIdMap[newItem.subGroupId] ?? newItem.subGroupId)
+              : null;
+          final compositeKey = '${targetGroupId}_${targetSubGroupId}_${newItem.name.trim().toLowerCase()}';
+
+          if (!existingItemKeys.contains(compositeKey)) {
+            final freshItem = newItem.copyWith(
+              id: 'item_${DateTime.now().microsecondsSinceEpoch}_${freshItemCounter++}',
+              groupId: targetGroupId,
+              subGroupId: targetSubGroupId,
+            );
+            existingItems.add(freshItem);
+            existingItemKeys.add(compositeKey);
+          }
         }
 
+        // 4. Merge Categories
         final mergedCategories = {...existingCategories, ...newCategories}.toList();
 
-        await _repository.saveGroups(mergedGroupsMap.values.toList());
-        await _repository.saveSubGroups(mergedSubGroupsMap.values.toList());
-        await _repository.saveItems(mergedItemsMap.values.toList());
+        await _repository.saveGroups(existingGroups);
+        await _repository.saveSubGroups(existingSubGroups);
+        await _repository.saveItems(existingItems);
         await CategoryManager.saveCategories(mergedCategories);
       } else {
         if (newGroups.isNotEmpty) {
