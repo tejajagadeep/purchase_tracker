@@ -174,40 +174,6 @@ class _PurchaseFormBottomSheetState
         .toList();
   }
 
-  double get _calculatedTotal {
-    final qty = int.tryParse(_quantityController.text) ?? 1;
-    final plannedPrice = double.tryParse(_plannedPriceController.text) ?? 0.0;
-    final mainActualText = _actualPriceController.text.trim();
-    final mainActual = double.tryParse(mainActualText);
-
-    if (qty == 1) {
-      if (_unitDates.isNotEmpty && _unitDates[0] != null) {
-        return mainActual ?? plannedPrice;
-      }
-      return plannedPrice;
-    }
-
-    double actualSum = 0.0;
-    int boughtCount = 0;
-
-    for (int i = 0; i < qty; i++) {
-      if (i < _unitDates.length && _unitDates[i] != null) {
-        boughtCount++;
-        final pText = i < _unitPriceControllers.length ? _unitPriceControllers[i].text.trim() : '';
-        final p = double.tryParse(pText);
-        if (p != null) {
-          actualSum += p;
-        } else if (mainActual != null) {
-          actualSum += mainActual;
-        } else {
-          actualSum += plannedPrice;
-        }
-      }
-    }
-
-    return boughtCount > 0 ? actualSum : 0.0;
-  }
-
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final qty = int.parse(_quantityController.text);
@@ -761,32 +727,7 @@ class _PurchaseFormBottomSheetState
                 ),
               ],
 
-              const SizedBox(height: 12),
 
-              // Total Calculation Banner
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Calculated Total:',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      formatCurrency(_calculatedTotal),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 20),
 
