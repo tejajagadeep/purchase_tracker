@@ -1697,7 +1697,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.menu_book_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('User Guide & Help'),
+                    Expanded(
+                      child: Text(
+                        'User Guide & Help',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1707,7 +1712,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.currency_exchange, size: 20),
                     SizedBox(width: 8),
-                    Text('Currency Settings'),
+                    Expanded(
+                      child: Text(
+                        'Currency Settings',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1717,7 +1727,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.copy_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('Copy Items from Template'),
+                    Expanded(
+                      child: Text(
+                        'Copy Items from Template',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1727,7 +1742,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.edit_note_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('Manage Master Templates'),
+                    Expanded(
+                      child: Text(
+                        'Manage Master Templates',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1737,7 +1757,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.calendar_month_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('Monthly Calendar View'),
+                    Expanded(
+                      child: Text(
+                        'Monthly Calendar View',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1747,7 +1772,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.folder_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('Switch Group'),
+                    Expanded(
+                      child: Text(
+                        'Switch Group',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1757,7 +1787,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.category_outlined, size: 20),
                     SizedBox(width: 8),
-                    Text('Manage Categories'),
+                    Expanded(
+                      child: Text(
+                        'Manage Categories',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1767,7 +1802,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.import_export, size: 20),
                     SizedBox(width: 8),
-                    Text('Backup & Restore Data'),
+                    Expanded(
+                      child: Text(
+                        'Backup & Restore Data',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1785,95 +1825,105 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_subGroups.isNotEmpty) ...[
                     SliverToBoxAdapter(
                       child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        height: 42,
                         margin: const EdgeInsets.only(top: 8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: _subGroups.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    final isSelected = _activeSubGroup == null;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
-                                      child: ChoiceChip(
-                                        showCheckmark: false,
-                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                        visualDensity: VisualDensity.compact,
-                                        labelPadding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 0,
-                                        ),
-                                        label: const Text(
-                                          'All Months/Groups',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        selected: isSelected,
-                                        onSelected: (_) {
-                                          setState(() {
-                                            _activeSubGroup = null;
-                                          });
-                                        },
-                                      ),
-                                    );
-                                  }
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          itemCount: _subGroups.length + 3,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              final isSelected = _activeSubGroup == null;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ChoiceChip(
+                                  showCheckmark: false,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 0,
+                                  ),
+                                  label: const Text(
+                                    'All Months/Groups',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _activeSubGroup = null;
+                                    });
+                                  },
+                                ),
+                              );
+                            }
 
-                                  final sg = _subGroups[index - 1];
-                                  final isSelected = _activeSubGroup?.id == sg.id;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      showCheckmark: false,
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      visualDensity: VisualDensity.compact,
-                                      labelPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 0,
+                            if (index <= _subGroups.length) {
+                              final sg = _subGroups[index - 1];
+                              final isSelected = _activeSubGroup?.id == sg.id;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ChoiceChip(
+                                  showCheckmark: false,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 0,
+                                  ),
+                                  label: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (sg.isPinned) ...[
+                                        const Icon(
+                                          Icons.push_pin,
+                                          size: 14,
+                                          color: Colors.orange,
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      Text(
+                                        sg.name,
+                                        textAlign: TextAlign.center,
                                       ),
-                                      label: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (sg.isPinned) ...[
-                                            const Icon(
-                                              Icons.push_pin,
-                                              size: 14,
-                                              color: Colors.orange,
-                                            ),
-                                            const SizedBox(width: 4),
-                                          ],
-                                          Text(
-                                            sg.name,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                      selected: isSelected,
-                                      onSelected: (_) {
-                                        setState(() {
-                                          _activeSubGroup = sg;
-                                        });
-                                      },
-                                    ),
-                                  );
-                                },
+                                    ],
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _activeSubGroup = sg;
+                                    });
+                                  },
+                                ),
+                              );
+                            }
+
+                            if (index == _subGroups.length + 1) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ActionChip(
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  avatar: const Icon(Icons.copy_outlined, size: 16),
+                                  label: const Text('Copy Template'),
+                                  onPressed: () => _showCopyFromTemplateDialog(
+                                    preSelectedSubGroupId: _activeSubGroup?.id,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ActionChip(
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                avatar: const Icon(Icons.add_circle_outline, size: 16),
+                                label: const Text('Add Month'),
+                                onPressed: _showAddSubGroupDialog,
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.copy_outlined, size: 20),
-                              tooltip: 'Copy Template into Sub-Group',
-                              onPressed: () => _showCopyFromTemplateDialog(
-                                preSelectedSubGroupId: _activeSubGroup?.id,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add_circle_outline, size: 22),
-                              tooltip: 'Add Sub-Group / Month',
-                              onPressed: _showAddSubGroupDialog,
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
                     ),
