@@ -1425,7 +1425,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double get totalSaved {
     double saved = 0.0;
     for (final item in _effectiveGroupItems) {
-      if (item.purchasedQuantity > 0 || item.isCompleted) {
+      if (item.isPurchased) {
         saved += (item.plannedTotal - item.actualTotal);
       }
     }
