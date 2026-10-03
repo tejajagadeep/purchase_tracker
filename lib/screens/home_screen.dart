@@ -1319,6 +1319,369 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showGroupDetailsModal() {
+    if (_activeGroup == null) return;
+
+    final theme = Theme.of(context);
+    final group = _activeGroup!;
+    final bool hasBudget = (_activeSubGroup != null
+            ? _activeSubGroup!.targetBudget
+            : group.targetBudget) !=
+        null;
+    final effectiveBudget = effectiveGroupBudget;
+    final progressPct = (effectiveBudget > 0
+            ? (totalActualSpent / effectiveBudget * 100)
+            : 0.0)
+        .clamp(0.0, 100.0);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.92,
+          expand: false,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  // BottomSheet Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Group Title & Read-Only Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: theme.colorScheme.primaryContainer,
+                              child: Icon(
+                                Icons.folder,
+                                color: theme.colorScheme.primary,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    group.name,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (_activeSubGroup != null)
+                                    Text(
+                                      'Sub-Group: ${_activeSubGroup!.name}',
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.visibility, size: 14, color: theme.colorScheme.outline),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Read-Only',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Group Description
+                  Card(
+                    elevation: 0,
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.description_outlined, size: 18, color: theme.colorScheme.outline),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              group.description != null && group.description!.trim().isNotEmpty
+                                  ? group.description!
+                                  : 'No group description provided.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontStyle: group.description == null ? FontStyle.italic : FontStyle.normal,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'Financial Summary Overview',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Metrics Overview Card
+                  Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: hasBudget ? 'Total Target Budget' : 'Effective Budget',
+                            value: formatCurrency(effectiveBudget),
+                            icon: Icons.account_balance_wallet_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Items Planned Total',
+                            value: formatCurrency(itemsPlannedTotal),
+                            icon: Icons.assignment_outlined,
+                            color: itemsPlannedTotal > (group.targetBudget ?? double.infinity)
+                                ? Colors.amber.shade900
+                                : theme.colorScheme.onSurface,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Total Actual Spent',
+                            value: formatCurrency(totalActualSpent),
+                            icon: Icons.check_circle_outline,
+                            color: Colors.green.shade700,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Remaining Budget',
+                            value: formatCurrency(remainingBudget),
+                            icon: Icons.pending_actions_outlined,
+                            color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Total Saved Amount',
+                            value: formatCurrency(totalSaved),
+                            icon: Icons.savings_outlined,
+                            color: totalSaved >= 0 ? Colors.green.shade700 : Colors.orange.shade800,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Progress & Status Card
+                  Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Budget Utilization',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${progressPct.toStringAsFixed(1)}%',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: (progressPct / 100.0).clamp(0.0, 1.0),
+                              minHeight: 8,
+                              backgroundColor: theme.colorScheme.primaryContainer,
+                              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Purchases Progress:',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.outline,
+                                ),
+                              ),
+                              Text(
+                                '$purchasedCount of ${_effectiveGroupItems.length} items completed',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Sub-Groups / Months Section (if any exist)
+                  if (_subGroups.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sub-Groups / Months Summary (${_subGroups.length})',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._subGroups.map((sg) {
+                      final sgItems = _items.where((i) => i.subGroupId == sg.id).toList();
+                      final sgPlanned = sgItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
+                      final sgEffBudget = sg.targetBudget ?? sgPlanned;
+                      final sgSpent = sgItems
+                          .where((i) => i.purchasedQuantity > 0 || i.isCompleted)
+                          .fold(0.0, (sum, i) => sum + i.actualTotal);
+                      final sgRemaining = sgEffBudget - sgSpent;
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          dense: true,
+                          leading: CircleAvatar(
+                            radius: 14,
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            child: Icon(Icons.folder_special, size: 14, color: theme.colorScheme.primary),
+                          ),
+                          title: Text(sg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            'Target: ${formatCurrency(sgEffBudget)} • Spent: ${formatCurrency(sgSpent)}',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          trailing: Text(
+                            'Rem: ${formatCurrency(sgRemaining)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: sgRemaining >= 0 ? Colors.green.shade700 : Colors.red,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // Close Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close Overview'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailsMetricRow(
+    ThemeData theme, {
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
   void _openManageCategories() {
     Navigator.push(
       context,
@@ -1994,6 +2357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onEditBudget: _activeSubGroup != null
                             ? () => _showEditSubGroupDialog(_activeSubGroup!)
                             : _showEditGroupBudgetDialog,
+                        onTapTitle: _showGroupDetailsModal,
                       ),
                     ),
                   ),

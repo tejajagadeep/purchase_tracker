@@ -11,6 +11,7 @@ class SummaryCard extends StatelessWidget {
   final int totalCount;
   final String title;
   final VoidCallback? onEditBudget;
+  final VoidCallback? onTapTitle;
 
   const SummaryCard({
     super.key,
@@ -23,6 +24,7 @@ class SummaryCard extends StatelessWidget {
     required this.totalCount,
     this.title = 'PURCHASE TRACKER',
     this.onEditBudget,
+    this.onTapTitle,
   });
 
   @override
@@ -68,14 +70,36 @@ class SummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  title.toUpperCase(),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.bold,
+                child: InkWell(
+                  onTap: onTapTitle,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title.toUpperCase(),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (onTapTitle != null) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
