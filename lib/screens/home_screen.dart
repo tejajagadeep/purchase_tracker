@@ -811,21 +811,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 final symbol = c['symbol']!;
                 final name = c['name']!;
                 final isSelected = current == symbol;
-                return RadioListTile<String>(
-                  value: symbol,
-                  groupValue: current,
+                return ListTile(
+                  dense: true,
+                  leading: Icon(
+                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline,
+                  ),
                   title: Text(
                     name,
                     style: TextStyle(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? Theme.of(context).colorScheme.primary : null,
                     ),
                   ),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() {
-                        current = val;
-                      });
-                    }
+                  onTap: () {
+                    setDialogState(() {
+                      current = symbol;
+                    });
                   },
                 );
               }).toList(),
@@ -839,13 +841,15 @@ class _HomeScreenState extends State<HomeScreen> {
             FilledButton(
               onPressed: () async {
                 await CurrencyManager.saveCurrencySymbol(current);
-                setState(() {});
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Currency symbol updated to "${CurrencyManager.currentSymbol}"'),
-                  ),
-                );
+                if (context.mounted) {
+                  setState(() {});
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Currency symbol updated to "${CurrencyManager.currentSymbol}"'),
+                    ),
+                  );
+                }
               },
               child: const Text('Apply'),
             ),
@@ -1679,13 +1683,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 _openBackupRestore();
               } else if (value == 'switch_group') {
                 _openGroupSelector();
-              } else if (value == 'clear_search') {
-                setState(() {
-                  _selectedCategory = CategoryConstants.all;
-                  _statusFilter = StatusFilter.all;
-                  _searchQuery = '';
-                  _searchController.clear();
-                });
               }
             },
             itemBuilder: (context) => [
@@ -1756,16 +1753,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(Icons.import_export, size: 20),
                     SizedBox(width: 8),
                     Text('Backup & Restore Data'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'clear_search',
-                child: Row(
-                  children: [
-                    Icon(Icons.filter_alt_off_outlined, size: 20),
-                    SizedBox(width: 8),
-                    Text('Reset Filters'),
                   ],
                 ),
               ),
