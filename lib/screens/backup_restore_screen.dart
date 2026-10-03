@@ -118,29 +118,34 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Paste Backup JSON'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                maxLines: 8,
-                decoration: const InputDecoration(
-                  hintText: 'Paste backup JSON string here...',
-                  border: OutlineInputBorder(),
-                ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      hintText: 'Paste backup JSON string here...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    title: const Text('Merge with current data'),
+                    subtitle: const Text('Check to keep existing purchases'),
+                    value: merge,
+                    onChanged: (val) {
+                      setDialogState(() {
+                        merge = val ?? false;
+                      });
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                title: const Text('Merge with current data'),
-                subtitle: const Text('Check to keep existing purchases'),
-                value: merge,
-                onChanged: (val) {
-                  setDialogState(() {
-                    merge = val ?? false;
-                  });
-                },
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -152,7 +157,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
                   final messenger = ScaffoldMessenger.of(context);
-                  Navigator.pop(context);
+                  final nav = Navigator.of(context);
+                  nav.pop();
                   setState(() {
                     _isProcessing = true;
                   });
@@ -160,22 +166,24 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     text,
                     merge: merge,
                   );
-                  setState(() {
-                    _isProcessing = false;
-                  });
-                  if (success) {
-                    widget.onDataRestored();
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Data restored successfully!'),
-                      ),
-                    );
-                  } else {
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Invalid JSON format.'),
-                      ),
-                    );
+                  if (mounted) {
+                    setState(() {
+                      _isProcessing = false;
+                    });
+                    if (success) {
+                      widget.onDataRestored();
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Data restored successfully!'),
+                        ),
+                      );
+                    } else {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Invalid JSON format.'),
+                        ),
+                      );
+                    }
                   }
                 }
               },
