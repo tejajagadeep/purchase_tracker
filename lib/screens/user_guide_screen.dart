@@ -156,9 +156,14 @@ class UserGuideScreen extends StatelessWidget {
                   'Monitor total planned costs, actual spending, remaining budget, and exact money saved.',
               items: [
                 _GuideStep(
-                  title: 'Dashboard Summary Card',
+                  title: 'Dashboard Summary Card & Group Overview',
                   detail:
-                      'Shows Total Group Budget, Items Planned, Actual Spent, Remaining Budget, and Total Saved ($symbol).',
+                      'Shows Total Group Budget, Items Planned, Actual Spent, Remaining Budget, and Total Saved ($symbol). Tap the Group Title (with ℹ️ info icon) to open a full Read-Only Financial Summary overview.',
+                ),
+                _GuideStep(
+                  title: 'Items Planned Remaining Metric',
+                  detail:
+                      'In the Read-Only Financial Summary, "Items Planned Remaining" calculates the exact remaining planned cost ($symbol) needed to purchase all unbought / pending items.',
                 ),
                 _GuideStep(
                   title: 'Immediate Spent Calculation',
