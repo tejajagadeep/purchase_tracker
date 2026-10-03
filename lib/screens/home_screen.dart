@@ -798,7 +798,12 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Copy from Template'),
+              const Expanded(
+                child: Text(
+                  'Copy from Template',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.settings_outlined, size: 20),
                 tooltip: 'Manage Templates',
@@ -822,6 +827,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Template Group Selector Dropdown
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: selectedTemplateId,
                   decoration: const InputDecoration(
                     labelText: 'Template Preset',
@@ -831,7 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   items: templateGroups.map((tg) {
                     return DropdownMenuItem(
                       value: tg.id,
-                      child: Text(tg.name),
+                      child: Text(tg.name, overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
                   onChanged: (val) async {
@@ -853,6 +859,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Target Sub-Group Dropdown Selector
                 if (_subGroups.isNotEmpty) ...[
                   DropdownButtonFormField<String?>(
+                    isExpanded: true,
                     initialValue: targetSubGroupId,
                     decoration: const InputDecoration(
                       labelText: 'Target Month / Sub-Group',
@@ -862,12 +869,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     items: [
                       const DropdownMenuItem<String?>(
                         value: null,
-                        child: Text('Main Group (All Months/Items)'),
+                        child: Text('Main Group (All Months/Items)', overflow: TextOverflow.ellipsis),
                       ),
                       ..._subGroups.map((sg) {
                         return DropdownMenuItem<String?>(
                           value: sg.id,
-                          child: Text(sg.name),
+                          child: Text(sg.name, overflow: TextOverflow.ellipsis),
                         );
                       }),
                     ],
@@ -883,9 +890,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Items (${selectedItemIds.length}/${templateItems.length})',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Expanded(
+                      child: Text(
+                        'Items (${selectedItemIds.length}/${templateItems.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     TextButton(
                       onPressed: () {
@@ -1038,6 +1048,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('Convert "${sourceGroup.name}" into a Sub-Group under:'),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: selectedParentGroupId,
               decoration: const InputDecoration(
                 labelText: 'Target Parent Group',
@@ -1046,7 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> {
               items: otherGroups.map((g) {
                 return DropdownMenuItem(
                   value: g.id,
-                  child: Text(g.name),
+                  child: Text(g.name, overflow: TextOverflow.ellipsis),
                 );
               }).toList(),
               onChanged: (val) {

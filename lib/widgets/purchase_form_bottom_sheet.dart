@@ -348,6 +348,7 @@ class _PurchaseFormBottomSheetState
               // Group Dropdown (Move item to another group)
               if (widget.groups != null && widget.groups!.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedGroupId,
                   decoration: const InputDecoration(
                     labelText: 'Group / Trip',
@@ -375,6 +376,7 @@ class _PurchaseFormBottomSheetState
               // Sub-Group / Month Dropdown (Move item to sub-group)
               if (availableSubs.isNotEmpty) ...[
                 DropdownButtonFormField<String?>(
+                  isExpanded: true,
                   initialValue: availableSubs.any((s) => s.id == _selectedSubGroupId)
                       ? _selectedSubGroupId
                       : null,
@@ -386,7 +388,7 @@ class _PurchaseFormBottomSheetState
                   items: [
                     const DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('Main Group (No Sub-Group)'),
+                      child: Text('Main Group (No Sub-Group)', overflow: TextOverflow.ellipsis),
                     ),
                     ...availableSubs.map((sg) {
                       return DropdownMenuItem<String?>(
@@ -502,6 +504,7 @@ class _PurchaseFormBottomSheetState
 
               // Line 4: Category Dropdown (On Line 4)
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
