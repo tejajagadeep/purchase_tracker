@@ -91,9 +91,19 @@ class SubGroupCard extends StatelessWidget {
                               if (subGroup.targetBudget != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Target Budget: ${formatCurrency(subGroup.targetBudget!)}',
+                                  'Target Budget',
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.outline,
+                                    fontSize: 10,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  formatCurrency(subGroup.targetBudget!),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                    fontSize: 11,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
