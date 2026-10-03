@@ -47,9 +47,11 @@ class SubGroupCard extends StatelessWidget {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
                           radius: 16,
@@ -86,7 +88,8 @@ class SubGroupCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              if (subGroup.targetBudget != null)
+                              if (subGroup.targetBudget != null) ...[
+                                const SizedBox(height: 2),
                                 Text(
                                   'Target Budget: ${formatCurrency(subGroup.targetBudget!)}',
                                   style: theme.textTheme.labelSmall?.copyWith(
@@ -94,19 +97,62 @@ class SubGroupCard extends StatelessWidget {
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                              ],
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (onPinSubGroup != null)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                              icon: Icon(
+                                subGroup.isPinned
+                                    ? Icons.push_pin
+                                    : Icons.push_pin_outlined,
+                                size: 18,
+                                color: subGroup.isPinned ? Colors.orange : null,
+                              ),
+                              tooltip: subGroup.isPinned
+                                  ? 'Unpin Sub-Group'
+                                  : 'Pin Sub-Group to Top',
+                              onPressed: onPinSubGroup,
+                            ),
+                          if (onEditSubGroup != null)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              tooltip: 'Edit Sub-Group',
+                              onPressed: onEditSubGroup,
+                            ),
+                          if (onDeleteSubGroup != null)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              tooltip: 'Delete Sub-Group',
+                              onPressed: onDeleteSubGroup,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
+                          horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
@@ -114,49 +160,13 @@ class SubGroupCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '$boughtCount/${items.length} bought',
+                          '$boughtCount of ${items.length} bought',
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                           ),
                         ),
                       ),
-                      if (onPinSubGroup != null)
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          icon: Icon(
-                            subGroup.isPinned
-                                ? Icons.push_pin
-                                : Icons.push_pin_outlined,
-                            size: 16,
-                            color: subGroup.isPinned ? Colors.orange : null,
-                          ),
-                          tooltip: subGroup.isPinned
-                              ? 'Unpin Sub-Group'
-                              : 'Pin Sub-Group to Top',
-                          onPressed: onPinSubGroup,
-                        ),
-                      if (onEditSubGroup != null)
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          icon: const Icon(Icons.edit_outlined, size: 16),
-                          tooltip: 'Edit Sub-Group',
-                          onPressed: onEditSubGroup,
-                        ),
-                      if (onDeleteSubGroup != null)
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: Colors.red,
-                          ),
-                          tooltip: 'Delete Sub-Group',
-                          onPressed: onDeleteSubGroup,
-                        ),
                     ],
                   ),
                 ],
