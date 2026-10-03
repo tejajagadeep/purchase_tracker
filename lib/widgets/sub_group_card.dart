@@ -30,6 +30,10 @@ class SubGroupCard extends StatelessWidget {
     final double spent = items
         .where((i) => i.purchasedQuantity > 0)
         .fold(0.0, (sum, i) => sum + i.actualTotal);
+    final double purchasedPlanned = items
+        .where((i) => i.purchasedQuantity > 0)
+        .fold(0.0, (sum, i) => sum + i.plannedTotal);
+    final double saved = purchasedPlanned - spent;
     final double remaining = effectiveBudget - spent;
     final int boughtCount = items.where((i) => i.purchasedQuantity > 0).length;
 
@@ -191,7 +195,7 @@ class SubGroupCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          subGroup.targetBudget != null ? 'Sub Budget' : 'Planned',
+                          'Saved',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -203,9 +207,10 @@ class SubGroupCard extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            formatCurrency(effectiveBudget),
+                            formatCurrency(saved),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: saved >= 0 ? Colors.green.shade700 : Colors.orange.shade700,
                             ),
                           ),
                         ),
