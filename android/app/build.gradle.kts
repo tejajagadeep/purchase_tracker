@@ -4,9 +4,49 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val runFlutterTests = tasks.register("runFlutterTests") {
+    doFirst {
+        val rootDir = project.rootDir.parentFile
+        val isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows
+        val flutterExecutable = if (isWindows) "flutter.bat" else "flutter"
+
+        println("========================================================================")
+        println("Executing 'flutter test' before assembling release build...")
+        println("========================================================================")
+
+        val processBuilder = ProcessBuilder(flutterExecutable, "test")
+            .directory(rootDir)
+            .redirectErrorStream(true)
+
+        val process = processBuilder.start()
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            throw GradleException(
+                "\n========================================================================\n" +
+                "RELEASE BUILD FAILED: Flutter Tests Failed!\n" +
+                "One or more unit or widget tests failed during 'flutter test'.\n\n" +
+                "Test Failure Output:\n$output\n" +
+                "Please fix all failing tests before building release APK or App Bundle.\n" +
+                "========================================================================\n"
+            )
+        } else {
+            println("All Flutter unit & widget tests passed successfully!")
+            println("========================================================================")
+        }
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.startsWith("assemble") || name.startsWith("bundle")) {
+        dependsOn(runFlutterTests)
+    }
+}
+
 android {
     namespace = "com.pj.purchase_tracker"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
