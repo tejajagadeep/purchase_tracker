@@ -14,6 +14,7 @@ import 'backup_restore_screen.dart';
 import 'calendar_expense_screen.dart';
 import 'manage_categories_screen.dart';
 import 'manage_templates_screen.dart';
+import 'user_guide_screen.dart';
 import '../utils/formatters.dart';
 
 enum SortOption {
@@ -1321,6 +1322,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openUserGuide() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UserGuideScreen(),
+      ),
+    );
+  }
+
   void _openCalendarView() {
     Navigator.push(
       context,
@@ -1623,38 +1633,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
               )
-            : InkWell(
-                onTap: _openGroupSelector,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        _activeGroup?.name ?? 'Purchase Tracker',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down),
-                  ],
-                ),
+            : const Text(
+                'Purchase Tracker',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_outlined),
-            tooltip: 'Expense Calendar',
-            onPressed: _openCalendarView,
-          ),
-          IconButton(
-            icon: const Icon(Icons.folder_copy_outlined),
-            tooltip: 'Switch Group',
-            onPressed: _openGroupSelector,
-          ),
-          IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltip: 'Search Purchases',
             onPressed: () {
               setState(() {
                 if (_isSearching) {
@@ -1667,9 +1653,26 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.help_outline_rounded),
+            tooltip: 'User Guide & Help',
+            onPressed: _openUserGuide,
+          ),
+          IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: 'Expense Calendar',
+            onPressed: _openCalendarView,
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder_copy_outlined),
+            tooltip: 'Switch Group',
+            onPressed: _openGroupSelector,
+          ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'currency_settings') {
+              if (value == 'user_guide') {
+                _openUserGuide();
+              } else if (value == 'currency_settings') {
                 _showCurrencySettingsDialog();
               } else if (value == 'calendar') {
                 _openCalendarView();
@@ -1686,6 +1689,16 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'user_guide',
+                child: Row(
+                  children: [
+                    Icon(Icons.menu_book_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('User Guide & Help'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'currency_settings',
                 child: Row(
