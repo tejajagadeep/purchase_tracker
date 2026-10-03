@@ -28,14 +28,14 @@ class SubGroupCard extends StatelessWidget {
     final double planned = items.fold(0.0, (sum, i) => sum + i.plannedTotal);
     final double effectiveBudget = subGroup.targetBudget ?? planned;
     final double spent = items
-        .where((i) => i.purchasedQuantity > 0)
+        .where((i) => i.purchasedQuantity > 0 || i.isCompleted)
         .fold(0.0, (sum, i) => sum + i.actualTotal);
     final double purchasedPlanned = items
-        .where((i) => i.purchasedQuantity > 0)
+        .where((i) => i.purchasedQuantity > 0 || i.isCompleted)
         .fold(0.0, (sum, i) => sum + i.plannedTotal);
     final double saved = purchasedPlanned - spent;
     final double remaining = effectiveBudget - spent;
-    final int boughtCount = items.where((i) => i.purchasedQuantity > 0).length;
+    final int boughtCount = items.where((i) => i.purchasedQuantity > 0 || i.isCompleted).length;
 
     return Card(
       elevation: 2,

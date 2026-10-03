@@ -1411,23 +1411,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   double get totalActualSpent {
-    return _effectiveGroupItems.where((item) => item.isPurchased).fold(
-          0.0,
-          (sum, item) => sum + item.actualTotal,
-        );
+    return _effectiveGroupItems
+        .where((item) => item.purchasedQuantity > 0 || item.isCompleted)
+        .fold(0.0, (sum, item) => sum + item.actualTotal);
   }
 
   double get totalPurchasedPlanned {
-    return _effectiveGroupItems.where((item) => item.isPurchased).fold(
-          0.0,
-          (sum, item) => sum + item.plannedTotal,
-        );
+    return _effectiveGroupItems
+        .where((item) => item.purchasedQuantity > 0 || item.isCompleted)
+        .fold(0.0, (sum, item) => sum + item.plannedTotal);
   }
 
   double get totalSaved {
     double saved = 0.0;
     for (final item in _effectiveGroupItems) {
-      if (item.isPurchased) {
+      if (item.purchasedQuantity > 0 || item.isCompleted) {
         saved += (item.plannedTotal - item.actualTotal);
       }
     }
@@ -1439,7 +1437,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int get purchasedCount {
-    return _effectiveGroupItems.where((item) => item.isPurchased).length;
+    return _effectiveGroupItems
+        .where((item) => item.purchasedQuantity > 0 || item.isCompleted)
+        .length;
   }
 
   List<PurchaseItem> get _filteredAndSortedItems {
@@ -1493,38 +1493,12 @@ class _HomeScreenState extends State<HomeScreen> {
       });
   }
 
-  void _togglePurchased(PurchaseItem item) async {
+  void _togglePurchased(PurchaseItem item) {
     final updatedIndex = _items.indexWhere((element) => element.id == item.id);
     if (updatedIndex == -1) return;
 
     final isNowPurchased = !item.isPurchased;
 
-    if (!isNowPurchased) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Unselect "${item.name}"?'),
-          content: const Text(
-            'Are you sure you want to unselect this purchase item?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Unselect'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirm != true) return;
-    }
-
-    // Preserve purchase dates across selecting and unselecting
     List<DateTime> newDates = item.purchaseDates;
     if (isNowPurchased && newDates.isEmpty) {
       newDates = List.generate(item.quantity, (_) => DateTime.now());
