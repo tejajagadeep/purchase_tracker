@@ -100,33 +100,36 @@ class SubGroupCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 6,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '$boughtCount of ${items.length} bought',
+                          '$boughtCount/${items.length} bought',
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: 10,
                           ),
                         ),
                       ),
-                      if (onPinSubGroup != null) ...[
-                        const SizedBox(width: 2),
+                      if (onPinSubGroup != null)
                         IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                           icon: Icon(
                             subGroup.isPinned
                                 ? Icons.push_pin
                                 : Icons.push_pin_outlined,
-                            size: 18,
+                            size: 16,
                             color: subGroup.isPinned ? Colors.orange : null,
                           ),
                           tooltip: subGroup.isPinned
@@ -134,27 +137,26 @@ class SubGroupCard extends StatelessWidget {
                               : 'Pin Sub-Group to Top',
                           onPressed: onPinSubGroup,
                         ),
-                      ],
-                      if (onEditSubGroup != null) ...[
-                        const SizedBox(width: 2),
+                      if (onEditSubGroup != null)
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          icon: const Icon(Icons.edit_outlined, size: 16),
                           tooltip: 'Edit Sub-Group',
                           onPressed: onEditSubGroup,
                         ),
-                      ],
-                      if (onDeleteSubGroup != null) ...[
-                        const SizedBox(width: 2),
+                      if (onDeleteSubGroup != null)
                         IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                           icon: const Icon(
                             Icons.delete_outline,
-                            size: 18,
+                            size: 16,
                             color: Colors.red,
                           ),
                           tooltip: 'Delete Sub-Group',
                           onPressed: onDeleteSubGroup,
                         ),
-                      ],
                     ],
                   ),
                 ],
