@@ -77,6 +77,31 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   Future<void> _importFromFile({required bool merge}) async {
+    if (!merge) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Replace All App Data?'),
+          content: const Text(
+            'Warning: Restoring backup data in Replace mode will overwrite and replace all your current groups, sub-groups, purchases, and custom categories.\n\nIt is strongly recommended to save a backup of your current data before proceeding.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Replace All Data'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
 
     setState(() {
@@ -156,6 +181,31 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               onPressed: () async {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
+                  if (!merge) {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Replace All App Data?'),
+                        content: const Text(
+                          'Warning: Restoring backup data in Replace mode will overwrite and replace all your current groups, sub-groups, purchases, and custom categories.\n\nIt is strongly recommended to save a backup of your current data before proceeding.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                            child: const Text('Replace All Data'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm != true) return;
+                  }
+
                   final messenger = ScaffoldMessenger.of(context);
                   final nav = Navigator.of(context);
                   nav.pop();
