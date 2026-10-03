@@ -1619,7 +1619,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
+        centerTitle: false,
         title: _isSearching
             ? TextField(
                 controller: _searchController,
