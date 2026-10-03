@@ -36,6 +36,7 @@ class PurchaseItemTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Checkbox to mark as purchased
               Checkbox(
@@ -51,68 +52,67 @@ class PurchaseItemTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              decoration: item.isPurchased
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: item.isPurchased
-                                  ? theme.colorScheme.outline
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      item.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        decoration: item.isPurchased
+                            ? TextDecoration.lineThrough
+                            : null,
+                        color: item.isPurchased
+                            ? theme.colorScheme.outline
+                            : null,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        // Quantity x Price
-                        Text(
-                          item.quantity > 1
-                              ? '${item.quantity} × ${formatCurrency(item.plannedPrice)}'
-                              : formatCurrency(item.plannedPrice),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
+
+                    // Category Chip on a dedicated line under Item Name
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CategoryConstants.getIcon(item.category),
+                            size: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        // Category Chip
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                CategoryConstants.getIcon(item.category),
-                                size: 12,
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              item.category,
+                              style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 10,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                item.category,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+
+                    const SizedBox(height: 4),
+
+                    // Quantity x Price
+                    Text(
+                      item.quantity > 1
+                          ? '${item.quantity} × ${formatCurrency(item.plannedPrice)}'
+                          : formatCurrency(item.plannedPrice),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+
                     if (item.notes != null && item.notes!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -129,6 +129,8 @@ class PurchaseItemTile extends StatelessWidget {
                 ),
               ),
 
+              const SizedBox(width: 8),
+
               // Quick +1 Unit Button for multi-quantity items
               if (item.quantity > 1 && !item.isPurchased && onAddUnitBought != null) ...[
                 IconButton(
@@ -143,13 +145,17 @@ class PurchaseItemTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    formatCurrency(item.effectiveTotal),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: item.isPurchased
-                          ? Colors.green.shade700
-                          : theme.colorScheme.onSurface,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      formatCurrency(item.effectiveTotal),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: item.isPurchased
+                            ? Colors.green.shade700
+                            : theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
