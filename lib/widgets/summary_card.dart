@@ -63,17 +63,22 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Title & Bought Count Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
-                  letterSpacing: 1.5,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -94,53 +99,63 @@ class SummaryCard extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Total Budget Row
+          // Total Budget & Items Planned Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hasValidGroupBudget
-                        ? 'Total Group Budget'
-                        : 'Items Planned Total',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        formatCurrency(effectiveBudget),
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          color: theme.colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasValidGroupBudget
+                          ? 'Total Group Budget'
+                          : 'Items Planned Total',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                       ),
-                      if (onEditBudget != null) ...[
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: onEditBudget,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Icon(
-                              Icons.edit_outlined,
-                              size: 20,
-                              color:
-                                  theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              formatCurrency(effectiveBudget),
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                color: theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
+                        if (onEditBudget != null) ...[
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: onEditBudget,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 20,
+                                color:
+                                    theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               if (hasValidGroupBudget) ...[
+                const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -169,13 +184,17 @@ class SummaryCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      formatCurrency(itemsPlannedTotal),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: isOverBudgetPlanned
-                            ? Colors.amberAccent
-                            : theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        formatCurrency(itemsPlannedTotal),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: isOverBudgetPlanned
+                              ? Colors.amberAccent
+                              : theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -205,21 +224,28 @@ class SummaryCard extends StatelessWidget {
                               theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Spent',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary
-                                .withValues(alpha: 0.8),
+                        Expanded(
+                          child: Text(
+                            'Spent',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimary
+                                  .withValues(alpha: 0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      formatCurrency(totalActualSpent),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formatCurrency(totalActualSpent),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -231,7 +257,7 @@ class SummaryCard extends StatelessWidget {
                 width: 1,
                 color: Colors.white24,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
 
               // Remaining Budget
               Expanded(
@@ -247,21 +273,28 @@ class SummaryCard extends StatelessWidget {
                               theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Remaining',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary
-                                .withValues(alpha: 0.8),
+                        Expanded(
+                          child: Text(
+                            'Remaining',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimary
+                                  .withValues(alpha: 0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      formatCurrency(remainingBudget),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formatCurrency(remainingBudget),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -273,7 +306,7 @@ class SummaryCard extends StatelessWidget {
                 width: 1,
                 color: Colors.white24,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
 
               // Total Saved
               Expanded(
@@ -290,23 +323,31 @@ class SummaryCard extends StatelessWidget {
                               theme.colorScheme.onPrimary.withValues(alpha: 0.9),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Saved',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary
-                                .withValues(alpha: 0.8),
+                        Expanded(
+                          child: Text(
+                            'Saved',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimary
+                                  .withValues(alpha: 0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      formatCurrency(totalSaved),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: totalSaved >= 0
-                            ? Colors.greenAccent.shade100
-                            : Colors.orangeAccent.shade100,
-                        fontWeight: FontWeight.bold,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        formatCurrency(totalSaved),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: totalSaved >= 0
+                              ? Colors.greenAccent.shade100
+                              : Colors.orangeAccent.shade100,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
