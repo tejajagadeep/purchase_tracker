@@ -108,7 +108,20 @@ class PurchaseRepository implements IPurchaseRepository {
   @override
   Future<List<PurchaseGroup>> getTemplateGroups() async {
     final allGroups = await getGroups(includeTemplates: true);
-    final templates = allGroups.where((g) => g.isTemplate).toList();
+    var templates = allGroups.where((g) => g.isTemplate).toList();
+
+    if (templates.isEmpty) {
+      final defaultTemplate = PurchaseGroup(
+        id: 'template_general',
+        name: 'General Master Template',
+        description: 'Default master template',
+        isTemplate: true,
+      );
+      templates = [defaultTemplate];
+      allGroups.add(defaultTemplate);
+      await saveGroups(allGroups);
+    }
+
     return templates;
   }
 
