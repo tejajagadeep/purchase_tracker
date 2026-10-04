@@ -71,6 +71,39 @@ String formatCurrency(double amount) {
   return '${isNegative ? '- ' : ''}$symbol$result';
 }
 
+/// Helper function to format currency enforcing exact 2 decimal places (e.g. ₹50.00, ₹1,250.50, ₹0.00)
+String formatCurrencyWithDecimals(double amount) {
+  final isNegative = amount < 0;
+  final absAmount = amount.abs();
+  final intPart = absAmount.truncate();
+
+  final integerPart = intPart.toString();
+
+  String result = '';
+  int len = integerPart.length;
+  if (len > 3) {
+    result = integerPart.substring(len - 3);
+    int pos = len - 3;
+    while (pos > 0) {
+      if (pos >= 2) {
+        result = '${integerPart.substring(pos - 2, pos)},$result';
+        pos -= 2;
+      } else {
+        result = '${integerPart.substring(0, pos)},$result';
+        pos = 0;
+      }
+    }
+  } else {
+    result = integerPart;
+  }
+
+  final decStr = absAmount.toStringAsFixed(2).split('.').last;
+  result = '$result.$decStr';
+
+  final symbol = CurrencyManager.currentSymbol;
+  return '${isNegative ? '- ' : ''}$symbol$result';
+}
+
 /// Helper function to format numbers for form text inputs without rounding off decimals.
 String formatPriceForInput(double price) {
   if (price == price.truncateToDouble()) {

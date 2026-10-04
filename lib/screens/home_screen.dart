@@ -1514,7 +1514,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: hasBudget ? 'Total Target Budget' : 'Effective Budget',
-                            value: formatCurrency(effectiveBudget),
+                            value: formatCurrencyWithDecimals(effectiveBudget),
                             icon: Icons.account_balance_wallet_outlined,
                             color: theme.colorScheme.primary,
                           ),
@@ -1522,7 +1522,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Remaining Budget',
-                            value: formatCurrency(remainingBudget),
+                            value: formatCurrencyWithDecimals(remainingBudget),
                             icon: Icons.pending_actions_outlined,
                             color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
                           ),
@@ -1530,7 +1530,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Total Actual Spent',
-                            value: formatCurrency(totalActualSpent),
+                            value: formatCurrencyWithDecimals(totalActualSpent),
                             icon: Icons.check_circle_outline,
                             color: Colors.green.shade700,
                           ),
@@ -1538,7 +1538,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Items Planned Total',
-                            value: formatCurrency(itemsPlannedTotal),
+                            value: formatCurrencyWithDecimals(itemsPlannedTotal),
                             icon: Icons.assignment_outlined,
                             color: itemsPlannedTotal > (group.targetBudget ?? double.infinity)
                                 ? Colors.amber.shade900
@@ -1548,7 +1548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Items Planned Remaining',
-                            value: formatCurrency(itemsPlannedRemaining),
+                            value: formatCurrencyWithDecimals(itemsPlannedRemaining),
                             icon: Icons.shopping_basket_outlined,
                             color: Colors.blue.shade800,
                           ),
@@ -1556,7 +1556,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Unplanned Spent',
-                            value: formatCurrency(unplannedSpent),
+                            value: formatCurrencyWithDecimals(unplannedSpent),
                             icon: Icons.add_shopping_cart_outlined,
                             color: Colors.orange.shade900,
                           ),
@@ -1564,7 +1564,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Over Spent Amount',
-                            value: formatCurrency(itemsOverSpentTotal),
+                            value: formatCurrencyWithDecimals(itemsOverSpentTotal),
                             icon: Icons.trending_up_outlined,
                             color: Colors.red.shade700,
                           ),
@@ -1572,7 +1572,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Items Saved Amount',
-                            value: formatCurrency(itemsSavedTotal),
+                            value: formatCurrencyWithDecimals(itemsSavedTotal),
                             icon: Icons.price_check_outlined,
                             color: Colors.green.shade700,
                           ),
@@ -1580,7 +1580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Total Saved Amount',
-                            value: formatCurrency(totalSaved),
+                            value: formatCurrencyWithDecimals(totalSaved),
                             icon: Icons.savings_outlined,
                             color: totalSaved >= 0 ? Colors.green.shade700 : Colors.orange.shade800,
                           ),
@@ -1680,11 +1680,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           title: Text(sg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text(
-                            'Target: ${formatCurrency(sgEffBudget)} • Spent: ${formatCurrency(sgSpent)}',
+                            'Target: ${formatCurrencyWithDecimals(sgEffBudget)} • Spent: ${formatCurrencyWithDecimals(sgSpent)}',
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: Text(
-                            'Rem: ${formatCurrency(sgRemaining)}',
+                            'Rem: ${formatCurrencyWithDecimals(sgRemaining)}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
