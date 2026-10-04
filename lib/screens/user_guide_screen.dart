@@ -166,6 +166,11 @@ class UserGuideScreen extends StatelessWidget {
                       'In the Read-Only Financial Summary, "Items Planned Remaining" calculates the exact remaining planned cost ($symbol) needed to purchase all unbought / pending items.',
                 ),
                 _GuideStep(
+                  title: 'Unplanned Spent Metric',
+                  detail:
+                      'In the Read-Only Financial Summary, "Unplanned Spent" tracks the exact total spent ($symbol) on impulse or unexpected purchases where planned cost was 0 (${symbol}0).',
+                ),
+                _GuideStep(
                   title: 'Immediate Spent Calculation',
                   detail:
                       'Recording unit purchases or entering actual prices updates Spent and Remaining Budget amounts immediately.',
