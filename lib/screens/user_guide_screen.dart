@@ -171,6 +171,21 @@ class UserGuideScreen extends StatelessWidget {
                       'In the Read-Only Financial Summary, "Unplanned Spent" tracks the exact total spent ($symbol) on impulse or unexpected purchases where planned cost was 0 (${symbol}0).',
                 ),
                 _GuideStep(
+                  title: 'Over Spent Amount',
+                  detail:
+                      'In the Read-Only Financial Summary, "Over Spent Amount" tracks the total amount ($symbol) over-spent on items where actual cost exceeded the planned price.',
+                ),
+                _GuideStep(
+                  title: 'Items Saved Amount',
+                  detail:
+                      'In the Read-Only Financial Summary, "Items Saved Amount" tracks the total money ($symbol) saved on checked items where actual cost was lower than planned.',
+                ),
+                _GuideStep(
+                  title: 'Exact 2 Decimal Precision',
+                  detail:
+                      'All figures in the Read-Only Financial Summary display exact 2 decimal places (e.g. ${symbol}50,000.00, ${symbol}0.00) for complete financial accuracy.',
+                ),
+                _GuideStep(
                   title: 'Immediate Spent Calculation',
                   detail:
                       'Recording unit purchases or entering actual prices updates Spent and Remaining Budget amounts immediately.',
