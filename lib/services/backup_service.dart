@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:purchase_tracker/constants/app_constants.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../constants/categories.dart';
@@ -34,7 +35,7 @@ class BackupService {
 
     final Map<String, dynamic> backupData = {
       'app': 'Purchase Tracker',
-      'version': 2,
+      'version': AppConstants.appVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'groups': groups.map((g) => g.toMap()).toList(),
       'subGroups': subGroups.map((sg) => sg.toMap()).toList(),
