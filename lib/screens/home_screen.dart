@@ -1640,12 +1640,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Budget Utilization',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  'Budget Utilization',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 '${progressPct.toStringAsFixed(1)}%',
                                 style: theme.textTheme.titleSmall?.copyWith(
@@ -1669,16 +1673,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Purchases Progress:',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline,
+                              Expanded(
+                                child: Text(
+                                  'Purchases Progress:',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                '$purchasedCount of ${_effectiveGroupItems.length} items completed',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '$purchasedCount of ${_effectiveGroupItems.length} bought',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.end,
                                 ),
                               ),
                             ],
@@ -1709,25 +1721,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          dense: true,
-                          leading: CircleAvatar(
-                            radius: 14,
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            child: Icon(Icons.folder_special, size: 14, color: theme.colorScheme.primary),
-                          ),
-                          title: Text(sg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                            'Target: ${formatCurrencyWithDecimals(sgEffBudget)} • Spent: ${formatCurrencyWithDecimals(sgSpent)}',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          trailing: Text(
-                            'Rem: ${formatCurrencyWithDecimals(sgRemaining)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: sgRemaining >= 0 ? Colors.green.shade700 : Colors.red,
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: theme.colorScheme.primaryContainer,
+                                child: Icon(Icons.folder_special, size: 14, color: theme.colorScheme.primary),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      sg.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Target: ${formatCurrencyWithDecimals(sgEffBudget)} • Spent: ${formatCurrencyWithDecimals(sgSpent)}',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        fontSize: 10,
+                                        color: theme.colorScheme.outline,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  'Rem: ${formatCurrencyWithDecimals(sgRemaining)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                    color: sgRemaining >= 0 ? Colors.green.shade700 : Colors.red,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -1763,23 +1802,33 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+        Expanded(
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Text(
-          value,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
+        const SizedBox(width: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerRight,
+          child: Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -2705,20 +2754,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            showSubGroupCardsView
-                                ? 'Sub-Groups / Months (${_subGroups.length})'
-                                : 'Your Purchases (${displayedItems.length})',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              showSubGroupCardsView
+                                  ? 'Sub-Groups / Months (${_subGroups.length})'
+                                  : 'Your Purchases (${displayedItems.length})',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            showSubGroupCardsView
-                                ? 'Tap to open sub-group'
-                                : 'Tap item to edit',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.outline,
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              showSubGroupCardsView
+                                  ? 'Tap to open sub-group'
+                                  : 'Tap item to edit',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
                             ),
                           ),
                         ],
