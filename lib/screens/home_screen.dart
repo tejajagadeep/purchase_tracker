@@ -1513,6 +1513,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
+                            label: 'Unplanned Spent',
+                            value: formatCurrency(unplannedSpent),
+                            icon: Icons.add_shopping_cart_outlined,
+                            color: Colors.orange.shade900,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
                             label: 'Remaining Budget',
                             value: formatCurrency(remainingBudget),
                             icon: Icons.pending_actions_outlined,
@@ -1781,6 +1789,18 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     return remaining;
+  }
+
+  double get unplannedSpent {
+    double total = 0.0;
+    for (final item in _effectiveGroupItems) {
+      if (item.plannedTotal == 0.0 &&
+          item.actualTotal > 0.0 &&
+          (item.purchasedQuantity > 0 || item.isCompleted)) {
+        total += item.actualTotal;
+      }
+    }
+    return total;
   }
 
   double get effectiveGroupBudget {
