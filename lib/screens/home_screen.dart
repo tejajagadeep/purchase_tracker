@@ -243,7 +243,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openGroupSelector() {
+  void _openGroupSelector() async {
+    final allRepoItems = await _repository.getItems();
+    final Map<String, double> groupPlannedTotals = {};
+    for (final g in _groups) {
+      final gItems = allRepoItems.where((i) => i.groupId == g.id);
+      groupPlannedTotals[g.id] = gItems.fold(0.0, (sum, i) => sum + i.plannedTotal);
+    }
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -284,6 +293,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (context, index) {
                       final group = _groups[index];
                       final isSelected = group.id == _activeGroup?.id;
+                      final plannedTotal = groupPlannedTotals[group.id] ?? 0.0;
+
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isSelected
@@ -313,14 +324,37 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        subtitle: Text(
-                          group.description != null && group.description!.isNotEmpty
-                              ? '${group.description!} • ${group.targetBudget != null ? 'Budget: ${formatCurrency(group.targetBudget!)}' : 'No target budget set'}'
-                              : (group.targetBudget != null
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (group.description != null && group.description!.trim().isNotEmpty) ...[
+                              Text(
+                                group.description!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.outline,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                            Text(
+                              (group.targetBudget != null && group.targetBudget! > 0)
                                   ? 'Budget: ${formatCurrency(group.targetBudget!)}'
-                                  : 'No target budget set'),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                                  : 'Planned: ${formatCurrency(plannedTotal)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: (group.targetBudget != null && group.targetBudget! > 0)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
