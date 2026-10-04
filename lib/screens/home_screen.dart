@@ -1495,16 +1495,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 16),
 
+                  // 1. Budget & Spent Overview Card
                   Text(
-                    'Financial Summary Overview',
+                    'Budget & Spent Overview',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  // Metrics Overview Card
                   Card(
                     elevation: 1,
                     child: Padding(
@@ -1521,20 +1519,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
-                            label: 'Remaining Budget',
-                            value: formatCurrencyWithDecimals(remainingBudget),
-                            icon: Icons.pending_actions_outlined,
-                            color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
-                          ),
-                          const Divider(height: 20),
-                          _buildDetailsMetricRow(
-                            theme,
                             label: 'Total Actual Spent',
                             value: formatCurrencyWithDecimals(totalActualSpent),
                             icon: Icons.check_circle_outline,
                             color: Colors.green.shade700,
                           ),
                           const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Remaining Budget',
+                            value: formatCurrencyWithDecimals(remainingBudget),
+                            icon: Icons.pending_actions_outlined,
+                            color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 2. Planned Items & Cost Card
+                  Text(
+                    'Planned Items & Cost',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Items Planned Total',
@@ -1547,20 +1565,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
-                            label: 'Items Planned Remaining',
-                            value: formatCurrencyWithDecimals(itemsPlannedRemaining),
-                            icon: Icons.shopping_basket_outlined,
-                            color: Colors.blue.shade800,
-                          ),
-                          const Divider(height: 20),
-                          _buildDetailsMetricRow(
-                            theme,
-                            label: 'Unplanned Spent',
+                            label: 'Items Unplanned Spent',
                             value: formatCurrencyWithDecimals(unplannedSpent),
                             icon: Icons.add_shopping_cart_outlined,
                             color: Colors.orange.shade900,
                           ),
                           const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Items Planned Remaining',
+                            value: formatCurrencyWithDecimals(itemsPlannedRemaining),
+                            icon: Icons.shopping_basket_outlined,
+                            color: Colors.blue.shade800,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 3. Savings & Adjustments Card
+                  Text(
+                    'Savings & Adjustments',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
                           _buildDetailsMetricRow(
                             theme,
                             label: 'Over Spent Amount',
