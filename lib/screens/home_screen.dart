@@ -1521,6 +1521,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
+                            label: 'Remaining Budget',
+                            value: formatCurrency(remainingBudget),
+                            icon: Icons.pending_actions_outlined,
+                            color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Total Actual Spent',
+                            value: formatCurrency(totalActualSpent),
+                            icon: Icons.check_circle_outline,
+                            color: Colors.green.shade700,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
                             label: 'Items Planned Total',
                             value: formatCurrency(itemsPlannedTotal),
                             icon: Icons.assignment_outlined,
@@ -1539,14 +1555,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
-                            label: 'Total Actual Spent',
-                            value: formatCurrency(totalActualSpent),
-                            icon: Icons.check_circle_outline,
-                            color: Colors.green.shade700,
-                          ),
-                          const Divider(height: 20),
-                          _buildDetailsMetricRow(
-                            theme,
                             label: 'Unplanned Spent',
                             value: formatCurrency(unplannedSpent),
                             icon: Icons.add_shopping_cart_outlined,
@@ -1555,10 +1563,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
                             theme,
-                            label: 'Remaining Budget',
-                            value: formatCurrency(remainingBudget),
-                            icon: Icons.pending_actions_outlined,
-                            color: remainingBudget >= 0 ? theme.colorScheme.primary : Colors.red,
+                            label: 'Over Spent Amount',
+                            value: formatCurrency(itemsOverSpentTotal),
+                            icon: Icons.trending_up_outlined,
+                            color: Colors.red.shade700,
+                          ),
+                          const Divider(height: 20),
+                          _buildDetailsMetricRow(
+                            theme,
+                            label: 'Items Saved Amount',
+                            value: formatCurrency(itemsSavedTotal),
+                            icon: Icons.price_check_outlined,
+                            color: Colors.green.shade700,
                           ),
                           const Divider(height: 20),
                           _buildDetailsMetricRow(
@@ -1835,6 +1851,27 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     return total;
+  }
+
+  double get itemsOverSpentTotal {
+    double overSpent = 0.0;
+    for (final item in _effectiveGroupItems) {
+      if ((item.purchasedQuantity > 0 || item.isCompleted) &&
+          item.actualTotal > item.plannedTotal) {
+        overSpent += (item.actualTotal - item.plannedTotal);
+      }
+    }
+    return overSpent;
+  }
+
+  double get itemsSavedTotal {
+    double saved = 0.0;
+    for (final item in _effectiveGroupItems) {
+      if (item.isPurchased && item.plannedTotal > item.actualTotal) {
+        saved += (item.plannedTotal - item.actualTotal);
+      }
+    }
+    return saved;
   }
 
   double get effectiveGroupBudget {
