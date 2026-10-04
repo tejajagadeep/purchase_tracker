@@ -1883,7 +1883,7 @@ class _HomeScreenState extends State<HomeScreen> {
             comp = a.name.toLowerCase().compareTo(b.name.toLowerCase());
             break;
           case SortOption.price:
-            comp = a.plannedTotal.compareTo(b.plannedTotal);
+            comp = a.effectiveTotal.compareTo(b.effectiveTotal);
             break;
           case SortOption.status:
             if (a.isPurchased == b.isPurchased) {

@@ -139,6 +139,34 @@ void main() {
       expect(isDuplicate('coffee', 'g2', 'sg1'), isFalse);
     });
 
+    test('Sorting by Price compares effectiveTotal', () {
+      final items = [
+        PurchaseItem(
+          id: '1',
+          name: 'Helmet',
+          quantity: 1,
+          plannedPrice: 5000.0,
+          category: 'Safety & Protection',
+        ),
+        PurchaseItem(
+          id: '2',
+          name: 'Gloves',
+          quantity: 1,
+          plannedPrice: 8000.0,
+          actualPrice: 500.0,
+          category: 'Riding Gear',
+          purchaseDates: [DateTime.now()],
+          isCompleted: true,
+        ),
+      ];
+
+      items.sort((a, b) => a.effectiveTotal.compareTo(b.effectiveTotal));
+
+      // Gloves (effectiveTotal 500) comes before Helmet (effectiveTotal 5000)
+      expect(items.first.name, equals('Gloves'));
+      expect(items.last.name, equals('Helmet'));
+    });
+
     test('PurchaseItem toMap & fromMap Serialization', () {
       final item = PurchaseItem(
         id: '10',
