@@ -144,6 +144,306 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
     return count;
   }
 
+  void _showReadOnlyItemDetailsSheet(
+    PurchaseItem item,
+    DateTime day,
+    int qtyOnDay,
+    double totalOnDay,
+  ) {
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  // BottomSheet Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Title & Read-Only Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.green.shade100,
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    item.category,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.visibility, size: 14, color: theme.colorScheme.outline),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Read-Only',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Calendar Purchase Highlights Card
+                  Card(
+                    elevation: 1,
+                    color: Colors.green.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_month, color: Colors.green.shade800, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bought on ${formatDate(day)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade900,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Recorded $qtyOnDay unit${qtyOnDay > 1 ? 's' : ''} purchased on this date',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            formatCurrency(totalOnDay),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade900,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'Item Price & Quantity Overview',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Total Planned Quantity', '${item.quantity} unit${item.quantity > 1 ? 's' : ''}'),
+                          const Divider(height: 20),
+                          _buildDetailRow('Planned Price per Unit', formatCurrency(item.plannedPrice)),
+                          const Divider(height: 20),
+                          _buildDetailRow('Total Planned Cost', formatCurrency(item.plannedTotal)),
+                          const Divider(height: 20),
+                          _buildDetailRow('Total Purchased Units', '${item.purchasedQuantity} of ${item.quantity} bought'),
+                          const Divider(height: 20),
+                          _buildDetailRow('Total Actual Amount Paid', formatCurrency(item.actualTotal)),
+                          if (item.plannedTotal > item.actualTotal) ...[
+                            const Divider(height: 20),
+                            _buildDetailRow(
+                              'Money Saved',
+                              formatCurrency(item.plannedTotal - item.actualTotal),
+                              valueColor: Colors.green.shade700,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (item.notes != null && item.notes!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Notes & Fitting Costs',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      elevation: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.note_alt_outlined, color: theme.colorScheme.outline, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                item.notes!,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (item.purchaseDates.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Recorded Purchase Dates (${item.purchaseDates.length})',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      elevation: 1,
+                      child: Column(
+                        children: List.generate(item.purchaseDates.length, (index) {
+                          final pDate = item.purchaseDates[index];
+                          double unitPrice = item.plannedPrice;
+                          if (index < item.unitActualPrices.length && item.unitActualPrices[index] != null) {
+                            unitPrice = item.unitActualPrices[index]!;
+                          } else if (item.actualPrice != null) {
+                            unitPrice = item.actualPrice!;
+                          }
+
+                          return ListTile(
+                            dense: true,
+                            leading: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.green.shade100,
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade800,
+                                ),
+                              ),
+                            ),
+                            title: Text('Unit ${index + 1}: ${formatDate(pDate)}'),
+                            trailing: Text(
+                              formatCurrency(unitPrice),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close Overview'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -427,6 +727,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
         return Card(
           margin: const EdgeInsets.only(bottom: 8.0),
           child: ListTile(
+            onTap: () => _showReadOnlyItemDetailsSheet(item, day, qty, total),
             leading: CircleAvatar(
               backgroundColor: Colors.green.shade100,
               child: Icon(
@@ -440,15 +741,22 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              '$qty unit${qty > 1 ? 's' : ''} • ${item.category}',
+              '$qty unit${qty > 1 ? 's' : ''} • ${item.category} • Tap for details',
             ),
-            trailing: Text(
-              formatCurrency(total),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.green.shade800,
-                fontSize: 16,
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatCurrency(total),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+              ],
             ),
           ),
         );
