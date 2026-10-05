@@ -359,13 +359,15 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
           child: TextFormField(
             controller: controller,
             autofocus: true,
+            inputFormatters: [LengthLimitingTextInputFormatter(30)],
             decoration: const InputDecoration(
-              labelText: 'Template Name *',
+              labelText: 'Template Name * (Max 30 chars)',
               hintText: 'e.g. Camping Trip Template',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Please enter template name';
+              if (value.trim().length > 30) return 'Name cannot exceed 30 characters';
               return null;
             },
           ),

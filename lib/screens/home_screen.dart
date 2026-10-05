@@ -548,14 +548,18 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: nameController,
                 autofocus: true,
+                inputFormatters: [LengthLimitingTextInputFormatter(30)],
                 decoration: const InputDecoration(
-                  labelText: 'Group Name *',
+                  labelText: 'Group Name * (Max 30 chars)',
                   hintText: 'e.g. Car Touring, Monthly Expenses',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter group name';
+                  }
+                  if (value.trim().length > 30) {
+                    return 'Name cannot exceed 30 characters';
                   }
                   return null;
                 },
@@ -647,13 +651,17 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: nameController,
                 autofocus: true,
+                inputFormatters: [LengthLimitingTextInputFormatter(30)],
                 decoration: const InputDecoration(
-                  labelText: 'Group Name *',
+                  labelText: 'Group Name * (Max 30 chars)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter group name';
+                  }
+                  if (value.trim().length > 30) {
+                    return 'Name cannot exceed 30 characters';
                   }
                   return null;
                 },
@@ -752,14 +760,18 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 controller: nameController,
                 autofocus: true,
+                inputFormatters: [LengthLimitingTextInputFormatter(30)],
                 decoration: const InputDecoration(
-                  labelText: 'Sub-Group / Month Name *',
+                  labelText: 'Sub-Group / Month Name * (Max 30 chars)',
                   hintText: 'e.g. October 2026, November 2026',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter name';
+                  }
+                  if (value.trim().length > 30) {
+                    return 'Name cannot exceed 30 characters';
                   }
                   return null;
                 },
@@ -845,13 +857,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextFormField(
                   controller: nameController,
                   autofocus: true,
+                  inputFormatters: [LengthLimitingTextInputFormatter(30)],
                   decoration: const InputDecoration(
-                    labelText: 'Sub-Group Name *',
+                    labelText: 'Sub-Group Name * (Max 30 chars)',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter name';
+                    }
+                    if (value.trim().length > 30) {
+                      return 'Name cannot exceed 30 characters';
                     }
                     return null;
                   },
