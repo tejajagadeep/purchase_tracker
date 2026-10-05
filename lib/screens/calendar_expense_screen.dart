@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/purchase_group.dart';
 import '../models/purchase_item.dart';
+import '../models/sub_group.dart';
 import '../repositories/purchase_repository.dart';
 import '../utils/formatters.dart';
 
@@ -16,6 +18,8 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
   DateTime _focusedMonth = DateTime.now();
   DateTime? _selectedDay;
   List<PurchaseItem> _allItems = [];
+  List<PurchaseGroup> _allGroups = [];
+  List<SubGroup> _allSubGroups = [];
   bool _isLoading = true;
 
   @override
@@ -28,10 +32,25 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
   Future<void> _loadItems() async {
     await CurrencyManager.loadCurrencySymbol();
     final items = await _repository.getItems();
+    final groups = await _repository.getGroups(includeTemplates: true);
+    final subGroups = await _repository.getSubGroups();
     setState(() {
       _allItems = items;
+      _allGroups = groups;
+      _allSubGroups = subGroups;
       _isLoading = false;
     });
+  }
+
+  String _getGroupName(String groupId) {
+    final match = _allGroups.where((g) => g.id == groupId);
+    return match.isNotEmpty ? match.first.name : 'Main Group';
+  }
+
+  String? _getSubGroupName(String? subGroupId) {
+    if (subGroupId == null) return null;
+    final match = _allSubGroups.where((sg) => sg.id == subGroupId);
+    return match.isNotEmpty ? match.first.name : null;
   }
 
   void _previousMonth() {
@@ -151,6 +170,8 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
     double totalOnDay,
   ) {
     final theme = Theme.of(context);
+    final groupName = _getGroupName(item.groupId);
+    final subGroupName = _getSubGroupName(item.subGroupId);
 
     showModalBottomSheet(
       context: context,
@@ -297,7 +318,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                   const SizedBox(height: 16),
 
                   Text(
-                    'Item Price & Quantity Overview',
+                    'Group & Price Details',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -310,6 +331,12 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
+                          _buildDetailRow('Group / Trip', groupName),
+                          if (subGroupName != null) ...[
+                            const Divider(height: 20),
+                            _buildDetailRow('Sub-Group / Month', subGroupName),
+                          ],
+                          const Divider(height: 20),
                           _buildDetailRow('Total Planned Quantity', '${item.quantity} unit${item.quantity > 1 ? 's' : ''}'),
                           const Divider(height: 20),
                           _buildDetailRow('Planned Price per Unit', formatCurrency(item.plannedPrice)),
@@ -582,7 +609,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 7,
-                      childAspectRatio: 0.8,
+                      childAspectRatio: 0.85,
                       crossAxisSpacing: 4,
                       mainAxisSpacing: 4,
                     ),
@@ -636,39 +663,41 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                                 width: isToday ? 1.5 : 0.5,
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '$dayNum',
-                                    style: TextStyle(
-                                      fontWeight:
-                                          isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected
-                                          ? theme.colorScheme.onPrimary
-                                          : (isToday ? theme.colorScheme.primary : null),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (daySpent > 0) ...[
-                                    const SizedBox(height: 2),
+                            padding: const EdgeInsets.all(2.0),
+                            child: Center(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
                                     Text(
-                                      formatCurrency(daySpent),
+                                      '$dayNum',
                                       style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight:
+                                            isToday || isSelected ? FontWeight.bold : FontWeight.normal,
                                         color: isSelected
                                             ? theme.colorScheme.onPrimary
-                                            : Colors.green.shade800,
+                                            : (isToday ? theme.colorScheme.primary : null),
+                                        fontSize: 12,
                                       ),
                                     ),
+                                    if (daySpent > 0) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        formatCurrency(daySpent),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? theme.colorScheme.onPrimary
+                                              : Colors.green.shade800,
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -735,6 +764,10 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
         final int qty = entry['quantity'];
         final double total = entry['total'];
 
+        final groupName = _getGroupName(item.groupId);
+        final subGroupName = _getSubGroupName(item.subGroupId);
+        final groupInfo = subGroupName != null ? '$groupName ($subGroupName)' : groupName;
+
         return Card(
           margin: const EdgeInsets.only(bottom: 8.0),
           child: ListTile(
@@ -752,7 +785,8 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              '$qty unit${qty > 1 ? 's' : ''} • ${item.category} • Tap for details',
+              '$qty unit${qty > 1 ? 's' : ''} • ${item.category} • $groupInfo',
+              style: const TextStyle(fontSize: 11),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
