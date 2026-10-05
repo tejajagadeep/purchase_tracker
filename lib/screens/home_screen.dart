@@ -253,194 +253,278 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
+    String groupSearchQuery = '';
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Select Purchase Group',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      tooltip: 'Add Group',
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _showAddGroupDialog();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _groups.length,
-                    itemBuilder: (context, index) {
-                      final group = _groups[index];
-                      final isSelected = group.id == _activeGroup?.id;
-                      final plannedTotal = groupPlannedTotals[group.id] ?? 0.0;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.92,
+          expand: false,
+          builder: (context, scrollController) {
+            return StatefulBuilder(
+              builder: (context, setModalState) {
+                final filteredGroups = _groups.where((g) {
+                  if (groupSearchQuery.isEmpty) return true;
+                  final q = groupSearchQuery.toLowerCase();
+                  final matchName = g.name.toLowerCase().contains(q);
+                  final matchDesc = g.description != null && g.description!.toLowerCase().contains(q);
+                  return matchName || matchDesc;
+                }).toList();
 
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            isSelected ? Icons.check : Icons.folder_outlined,
-                            color: isSelected
-                                ? Colors.white
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    top: 16,
+                    left: 20,
+                    right: 20,
+                  ),
+                  child: Column(
+                    children: [
+                      // BottomSheet Handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        title: Row(
-                          children: [
-                            if (group.isPinned) ...[
-                              const Icon(Icons.push_pin, size: 14, color: Colors.orange),
-                              const SizedBox(width: 4),
-                            ],
-                            Expanded(
-                              child: Text(
-                                group.name,
-                                style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (group.description != null && group.description!.trim().isNotEmpty) ...[
-                              Text(
-                                group.description!,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.outline,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                            ],
-                            Text(
-                              (group.targetBudget != null && group.targetBudget! > 0)
-                                  ? 'Budget: ${formatCurrency(group.targetBudget!)}'
-                                  : 'Planned: ${formatCurrency(plannedTotal)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: (group.targetBudget != null && group.targetBudget! > 0)
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
+                      ),
+
+                      // Header Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Select Group (${_groups.length})',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            tooltip: 'Add Group',
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _showAddGroupDialog();
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Live Search Bar for 100+ Groups
+                      TextField(
+                        autofocus: _groups.length > 5,
+                        decoration: InputDecoration(
+                          hintText: 'Search 100+ groups by name or description...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: groupSearchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () {
+                                    setModalState(() {
+                                      groupSearchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          isDense: true,
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (isSelected)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 8.0),
-                                child: Icon(Icons.check_circle, color: Colors.blue, size: 20),
-                              ),
-                            PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert, size: 20),
-                              onSelected: (action) {
-                                if (action == 'pin') {
-                                  Navigator.pop(context);
-                                  _togglePinGroup(group);
-                                } else if (action == 'edit') {
-                                  Navigator.pop(context);
-                                  _showEditGroupDialog(group);
-                                } else if (action == 'move') {
-                                  Navigator.pop(context);
-                                  _showMoveGroupDialog(group);
-                                } else if (action == 'delete') {
-                                  Navigator.pop(context);
-                                  _confirmDeleteGroup(group);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'pin',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        group.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
-                                        size: 18,
+                        onChanged: (val) {
+                          setModalState(() {
+                            groupSearchQuery = val;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Filtered Groups List
+                      Expanded(
+                        child: filteredGroups.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No groups found matching "$groupSearchQuery"',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.outline,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                itemCount: filteredGroups.length,
+                                itemBuilder: (context, index) {
+                                  final group = filteredGroups[index];
+                                  final isSelected = group.id == _activeGroup?.id;
+                                  final plannedTotal = groupPlannedTotals[group.id] ?? 0.0;
+
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: isSelected
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                      child: Icon(
+                                        isSelected ? Icons.check : Icons.folder_outlined,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(group.isPinned ? 'Unpin Group' : 'Pin Group to Top'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit_outlined, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Edit Group'),
-                                    ],
-                                  ),
-                                ),
-                                if (_groups.length > 1)
-                                  const PopupMenuItem(
-                                    value: 'move',
-                                    child: Row(
+                                    ),
+                                    title: Row(
                                       children: [
-                                        Icon(Icons.drive_file_move_outlined, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Move Group To...'),
+                                        if (group.isPinned) ...[
+                                          const Icon(Icons.push_pin, size: 14, color: Colors.orange),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        Expanded(
+                                          child: Text(
+                                            group.name,
+                                            style: TextStyle(
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Delete Group', style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _selectGroup(group);
-                        },
-                      );
-                    },
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (group.description != null && group.description!.trim().isNotEmpty) ...[
+                                          Text(
+                                            group.description!,
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.outline,
+                                              fontSize: 12,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 2),
+                                        ],
+                                        Text(
+                                          (group.targetBudget != null && group.targetBudget! > 0)
+                                              ? 'Target Budget: ${formatCurrency(group.targetBudget!)}'
+                                              : 'Items Planned: ${formatCurrency(plannedTotal)}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: (group.targetBudget != null && group.targetBudget! > 0)
+                                                ? Theme.of(context).colorScheme.primary
+                                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                            fontSize: 12,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isSelected)
+                                          const Padding(
+                                            padding: EdgeInsets.only(right: 8.0),
+                                            child: Icon(Icons.check_circle, color: Colors.blue, size: 20),
+                                          ),
+                                        PopupMenuButton<String>(
+                                          icon: const Icon(Icons.more_vert, size: 20),
+                                          onSelected: (action) {
+                                            if (action == 'pin') {
+                                              Navigator.pop(context);
+                                              _togglePinGroup(group);
+                                            } else if (action == 'edit') {
+                                              Navigator.pop(context);
+                                              _showEditGroupDialog(group);
+                                            } else if (action == 'move') {
+                                              Navigator.pop(context);
+                                              _showMoveGroupDialog(group);
+                                            } else if (action == 'delete') {
+                                              Navigator.pop(context);
+                                              _confirmDeleteGroup(group);
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 'pin',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    group.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
+                                                    size: 18,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(group.isPinned ? 'Unpin Group' : 'Pin Group to Top'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.edit_outlined, size: 18),
+                                                  SizedBox(width: 8),
+                                                  Text('Edit Group'),
+                                                ],
+                                              ),
+                                            ),
+                                            if (_groups.length > 1)
+                                              const PopupMenuItem(
+                                                value: 'move',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.drive_file_move_outlined, size: 18),
+                                                    SizedBox(width: 8),
+                                                    Text('Move Group To...'),
+                                                  ],
+                                                ),
+                                              ),
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
+                                                  const SizedBox(width: 8),
+                                                  Text('Delete Group', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _selectGroup(group);
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ),
+                );
+              },
+            );
+          },
         );
       },
     );
