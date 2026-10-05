@@ -582,7 +582,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 7,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.8,
                       crossAxisSpacing: 4,
                       mainAxisSpacing: 4,
                     ),
@@ -636,37 +636,40 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                                 width: isToday ? 1.5 : 0.5,
                               ),
                             ),
-                            padding: const EdgeInsets.all(2.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '$dayNum',
-                                  style: TextStyle(
-                                    fontWeight:
-                                        isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected
-                                        ? theme.colorScheme.onPrimary
-                                        : (isToday ? theme.colorScheme.primary : null),
-                                    fontSize: 12,
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$dayNum',
+                                    style: TextStyle(
+                                      fontWeight:
+                                          isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected
+                                          ? theme.colorScheme.onPrimary
+                                          : (isToday ? theme.colorScheme.primary : null),
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                                if (daySpent > 0)
-                                  FittedBox(
-                                    child: Text(
+                                  if (daySpent > 0) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
                                       formatCurrency(daySpent),
                                       style: TextStyle(
-                                        fontSize: 9,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         color: isSelected
                                             ? theme.colorScheme.onPrimary
                                             : Colors.green.shade800,
                                       ),
                                     ),
-                                  )
-                                else
-                                  const SizedBox(height: 10),
-                              ],
+                                  ],
+                                ],
+                              ),
                             ),
                           ),
                         );
