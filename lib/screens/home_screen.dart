@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextField(
                         autofocus: _groups.length > 5,
                         decoration: InputDecoration(
-                          hintText: 'Search 100+ groups by name or description...',
+                          hintText: 'Search groups by name or description...',
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: groupSearchQuery.isNotEmpty
                               ? IconButton(
