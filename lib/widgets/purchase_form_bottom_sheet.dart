@@ -364,7 +364,7 @@ class _PurchaseFormBottomSheetState
                   isExpanded: true,
                   initialValue: _selectedGroupId,
                   decoration: const InputDecoration(
-                    labelText: 'Group / Trip',
+                    labelText: 'Group',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.folder_outlined),
                   ),

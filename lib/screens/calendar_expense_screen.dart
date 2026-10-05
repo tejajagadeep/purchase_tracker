@@ -331,7 +331,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          _buildDetailRow('Group / Trip', groupName),
+                          _buildDetailRow('Group', groupName),
                           if (subGroupName != null) ...[
                             const Divider(height: 20),
                             _buildDetailRow('Sub-Group / Month', subGroupName),
