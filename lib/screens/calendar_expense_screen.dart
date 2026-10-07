@@ -785,7 +785,7 @@ class _CalendarExpenseScreenState extends State<CalendarExpenseScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              qty > 1 ? '${item.category} • $qty' : item.category,
+              qty > 1 ? '${item.category} x $qty' : item.category,
               style: const TextStyle(fontSize: 11),
             ),
             trailing: Row(

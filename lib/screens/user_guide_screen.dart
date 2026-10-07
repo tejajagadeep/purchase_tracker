@@ -220,7 +220,7 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Clean Calendar Item Tiles',
-                  detail: 'Expense items listed under a date show category names and quantities (e.g. Food & Dining • 2).',
+                  detail: 'Expense items listed under a date show category names and quantities (e.g. Food & Dining x 2).',
                 ),
                 _GuideStep(
                   title: 'Read-Only Calendar Item Overview',
