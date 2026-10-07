@@ -230,15 +230,18 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Daily Spending Breakdown',
-                  detail: 'Days with purchases display the exact amount spent in green using your selected currency symbol. Tap any date on the grid to inspect itemized purchases bought on that day.',
+                  detail:
+                  'Days with purchases display the exact amount spent in green using your selected currency symbol. Tap any date on the grid to inspect itemized purchases bought on that day.',
                 ),
                 _GuideStep(
                   title: 'Clean Calendar Item Tiles',
-                  detail: 'Expense items listed under a date show category names and quantities (e.g. Food & Dining x 2).',
+                  detail:
+                  'Expense items listed under a date show category names and quantities (e.g. Food & Dining x 2).',
                 ),
                 _GuideStep(
                   title: 'Read-Only Calendar Item Overview',
-                  detail: 'Tap any expense item in the calendar day list to open its Read-Only Item Overview sheet, showing parent Group/Trip, Sub-Group/Month, unit purchase dates, and Money Saved (calculated only when item is checked as completed).',
+                  detail:
+                  'Tap any expense item in the calendar day list to open its Read-Only Item Overview sheet, showing parent Group/Trip, Sub-Group/Month, unit purchase dates, and Money Saved (calculated only when item is checked as completed).',
                 ),
               ],
             ),
