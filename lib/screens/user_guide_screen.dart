@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_constants.dart';
 import '../utils/formatters.dart';
 
@@ -76,28 +77,23 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.folder_special_outlined,
               color: Colors.blue,
               title: '1. Groups & Sub-Groups (Months / Trips)',
-              description:
-                  'Organize your purchases by main trips or events and break them down into monthly or categorical sub-groups.',
+              description: 'Organize your purchases by main trips or events and break them down into monthly or categorical sub-groups.',
               items: [
                 _GuideStep(
                   title: 'Create Main Groups',
-                  detail:
-                      'Tap "Switch Group" in the top menu or top bar to create new groups (e.g. "Bike Touring", "Home Expenses"). You can set a target budget and an optional description.',
+                  detail: 'Tap "Switch Group" in the top menu or top bar to create new groups (e.g. "Bike Touring", "Home Expenses"). You can set a target budget and an optional description.',
                 ),
                 _GuideStep(
                   title: 'Add Sub-Groups / Months',
-                  detail:
-                      'Tap "+ Add Sub-Group / Month" on the dashboard to create sub-groups (e.g. "October 2026", "Camping Gear").',
+                  detail: 'Tap "+ Add Sub-Group / Month" on the dashboard to create sub-groups (e.g. "October 2026", "Camping Gear").',
                 ),
                 _GuideStep(
                   title: 'Pin & Complete Toggles',
-                  detail:
-                      'Tap the pin icon on any group or sub-group card to pin it to the top. Tap the edit or delete button on sub-group cards to manage them.',
+                  detail: 'Tap the pin icon on any group or sub-group card to pin it to the top. Tap the edit or delete button on sub-group cards to manage them.',
                 ),
                 _GuideStep(
                   title: 'Sub-Group Card Metrics',
-                  detail:
-                      'Sub-group cards display Target Budget, Spent, Remaining, and Saved metrics along with a bought items counter.',
+                  detail: 'Sub-group cards display Target Budget, Spent, Remaining, and Saved metrics along with a bought items counter.',
                 ),
               ],
             ),
@@ -109,8 +105,7 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.add_shopping_cart_outlined,
               color: Colors.green,
               title: '2. Adding & Editing Purchases',
-              description:
-                  'Plan item quantities and prices, and record unit-by-unit purchases with custom dates and actual prices paid.',
+              description: 'Plan item quantities and prices, and record unit-by-unit purchases with custom dates and actual prices paid.',
               items: [
                 _GuideStep(
                   title: 'Add New Purchase (+)',
@@ -119,8 +114,7 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Duplicate Name Protection',
-                  detail:
-                      'You cannot add, rename, or move an item to a name that already exists in the same Group or Sub-Group list. Same item names are allowed in different sub-groups!',
+                  detail: 'You cannot add, rename, or move an item to a name that already exists in the same Group or Sub-Group list. Same item names are allowed in different sub-groups!',
                 ),
                 _GuideStep(
                   title: 'Multi-Quantity Unit Purchases',
@@ -129,18 +123,15 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Quick +1 Unit Bought Button',
-                  detail:
-                      'Tap the blue "+" button on any dashboard item tile to record 1 unit as bought today with a single tap!',
+                  detail: 'Tap the blue "+" button on any dashboard item tile to record 1 unit as bought today with a single tap!',
                 ),
                 _GuideStep(
                   title: 'Selection & Date Preservation',
-                  detail:
-                      'Unselecting a checked item keeps all your recorded purchase dates and custom unit prices safely in memory so re-selecting restores them instantly.',
+                  detail: 'Unselecting a checked item keeps all your recorded purchase dates and custom unit prices safely in memory so re-selecting restores them instantly.',
                 ),
                 _GuideStep(
                   title: 'Auto-Check Completion Rules',
-                  detail:
-                      'Single-quantity items auto-check when "Mark as Purchased" is ON. Multi-quantity items auto-check on save ONLY when ALL quantity units are checked/bought.',
+                  detail: 'Single-quantity items auto-check when "Mark as Purchased" is ON. Multi-quantity items auto-check on save ONLY when ALL quantity units are checked/bought.',
                 ),
               ],
             ),
@@ -152,8 +143,7 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.account_balance_wallet_outlined,
               color: Colors.purple,
               title: '3. Budgets, Spent & Savings Metrics',
-              description:
-                  'Monitor total planned costs, actual spending, remaining budget, and exact money saved.',
+              description: 'Monitor total planned costs, actual spending, remaining budget, and exact money saved.',
               items: [
                 _GuideStep(
                   title: 'Dashboard Summary Card & Group Overview',
@@ -187,8 +177,7 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Immediate Spent Calculation',
-                  detail:
-                      'Recording unit purchases or entering actual prices updates Spent and Remaining Budget amounts immediately.',
+                  detail: 'Recording unit purchases or entering actual prices updates Spent and Remaining Budget amounts immediately.',
                 ),
                 _GuideStep(
                   title: 'Saved Amount Rule',
@@ -202,8 +191,7 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 _GuideStep(
                   title: 'Over-Budget Warning Highlight',
-                  detail:
-                      'If planned items cost exceeds your set group budget, the Items Planned label turns Amber/Gold with a ⚠️ warning icon.',
+                  detail: 'If planned items cost exceeds your set group budget, the Items Planned label turns Amber/Gold with a ⚠️ warning icon.',
                 ),
                 _GuideStep(
                   title: 'Currency Settings',
@@ -220,18 +208,23 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.calendar_month_outlined,
               color: Colors.orange,
               title: '4. Monthly Expense Calendar',
-              description:
-                  'View your daily purchase totals on an interactive monthly calendar.',
+              description: 'View your daily purchase totals on an interactive monthly calendar.',
               items: [
                 _GuideStep(
                   title: 'Open Calendar View',
-                  detail:
-                      'Tap the Calendar icon in the top app bar or top menu to open the Monthly Expense Calendar.',
+                  detail: 'Tap the Calendar icon in the top app bar or top menu to open the Monthly Expense Calendar.',
                 ),
                 _GuideStep(
                   title: 'Daily Spending Breakdown',
-                  detail:
-                      'Days with purchases display the exact amount spent in green using your selected currency symbol. Tap any date on the grid to inspect itemized purchases bought on that day.',
+                  detail: 'Days with purchases display the exact amount spent in green using your selected currency symbol. Tap any date on the grid to inspect itemized purchases bought on that day.',
+                ),
+                _GuideStep(
+                  title: 'Clean Calendar Item Tiles',
+                  detail: 'Expense items listed under a date show category names and quantities (e.g. Food & Dining • 2).',
+                ),
+                _GuideStep(
+                  title: 'Read-Only Calendar Item Overview',
+                  detail: 'Tap any expense item in the calendar day list to open its Read-Only Item Overview sheet, showing parent Group/Trip, Sub-Group/Month, unit purchase dates, and Money Saved (calculated only when item is checked as completed).',
                 ),
               ],
             ),
@@ -243,18 +236,15 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.copy_outlined,
               color: Colors.teal,
               title: '5. Reusable Master Templates',
-              description:
-                  'Create master item catalogs and copy them into any active group or month in one tap.',
+              description: 'Create master item catalogs and copy them into any active group or month in one tap.',
               items: [
                 _GuideStep(
                   title: 'Manage Master Templates',
-                  detail:
-                      'Go to Menu > Manage Master Templates to create master template presets (e.g., "Camping Trip Checklist", "Monthly Grocery List").',
+                  detail: 'Go to Menu > Manage Master Templates to create master template presets (e.g., "Camping Trip Checklist", "Monthly Grocery List").',
                 ),
                 _GuideStep(
                   title: 'Copy Items from Template',
-                  detail:
-                      'Tap "Copy Items from Template" in the top menu or on a sub-group card. Select items and tap Copy to copy them into your active group or sub-group. Duplicate item names are automatically skipped!',
+                  detail: 'Tap "Copy Items from Template" in the top menu or on a sub-group card. Select items and tap Copy to copy them into your active group or sub-group. Duplicate item names are automatically skipped!',
                 ),
               ],
             ),
@@ -266,23 +256,19 @@ class UserGuideScreen extends StatelessWidget {
               icon: Icons.import_export,
               color: Colors.indigo,
               title: '6. Backup, Restore & Data Privacy',
-              description:
-                  '100% offline local privacy with full JSON Backup and Restore.',
+              description: '100% offline local privacy with full JSON Backup and Restore.',
               items: [
                 _GuideStep(
                   title: 'Export Backup',
-                  detail:
-                      'Go to Menu > Backup & Restore Data > Save Backup File to prompt location selection and save a JSON backup file on your device or Google Drive.',
+                  detail: 'Go to Menu > Backup & Restore Data > Save Backup File to prompt location selection and save a JSON backup file on your device or Google Drive.',
                 ),
                 _GuideStep(
                   title: 'Merge Backup Data',
-                  detail:
-                      'Select "Merge Data" when importing a backup file to seamlessly combine new groups, sub-groups, items, and custom categories with your current data without deleting anything!',
+                  detail: 'Select "Merge Data" when importing a backup file to seamlessly combine new groups, sub-groups, items, and custom categories with your current data without deleting anything!',
                 ),
                 _GuideStep(
                   title: 'Replace Backup Data',
-                  detail:
-                      'Select "Replace Data" to overwrite current data with a backup file. A safety warning dialog prompts you to confirm before replacing any data.',
+                  detail: 'Select "Replace Data" to overwrite current data with a backup file. A safety warning dialog prompts you to confirm before replacing any data.',
                 ),
               ],
             ),
@@ -355,22 +341,14 @@ class UserGuideScreen extends StatelessWidget {
             fontSize: 11,
           ),
         ),
-        childrenPadding: const EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
+        childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         children: items.map((step) {
           return Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.arrow_right_rounded,
-                  color: color,
-                  size: 20,
-                ),
+                Icon(Icons.arrow_right_rounded, color: color, size: 20),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Column(
@@ -406,8 +384,5 @@ class _GuideStep {
   final String title;
   final String detail;
 
-  _GuideStep({
-    required this.title,
-    required this.detail,
-  });
+  _GuideStep({required this.title, required this.detail});
 }
