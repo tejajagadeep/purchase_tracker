@@ -101,164 +101,176 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Template Item'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Item Name *',
-                    hintText: 'e.g. Gym Fee, Dosa, Fuel',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter item name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final tQty = int.tryParse(qtyController.text) ?? 1;
+          final tPrice = double.tryParse(priceController.text) ?? 0.0;
+          final tTotal = tQty * tPrice;
+
+          return AlertDialog(
+            title: const Text('Add Template Item'),
+            content: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      flex: 1,
-                      child: TextFormField(
-                        controller: qtyController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Qty *',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          final n = int.tryParse(value ?? '');
-                          if (n == null || n < 1) return 'Min 1';
-                          return null;
-                        },
+                    TextFormField(
+                      controller: nameController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Item Name *',
+                        hintText: 'e.g. Gym Fee, Dosa, Fuel',
+                        border: OutlineInputBorder(),
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter item name';
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: priceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d{0,12}(\.\d{0,2})?'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: TextFormField(
+                            controller: qtyController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(6),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Qty *',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (_) => setDialogState(() {}),
+                            validator: (value) {
+                              final n = int.tryParse(value ?? '');
+                              if (n == null || n < 1) return 'Min 1';
+                              return null;
+                            },
                           ),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              CurrencyManager.currentSymbol,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: priceController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d{0,12}(\.\d{0,2})?'),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: tQty > 1 && tTotal > 0
+                                  ? 'Planned Price (${CurrencyManager.currentSymbol}) * (${formatCurrency(tTotal)})'
+                                  : 'Planned Price (${CurrencyManager.currentSymbol}) *',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Text(
+                                  CurrencyManager.currentSymbol,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
                               ),
                             ),
+                            onChanged: (_) => setDialogState(() {}),
+                            validator: (value) {
+                              final p = double.tryParse(value ?? '');
+                              if (p == null || p < 0) return 'Invalid price';
+                              return null;
+                            },
                           ),
                         ),
-                        validator: (value) {
-                          final p = double.tryParse(value ?? '');
-                          if (p == null || p < 0) return 'Invalid price';
-                          return null;
-                        },
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: category,
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _categories.map((c) {
+                        return DropdownMenuItem(
+                          value: c,
+                          child: Text(c, overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) category = val;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes (Optional)',
+                        border: OutlineInputBorder(),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: category,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _categories.map((c) {
-                    return DropdownMenuItem(
-                      value: c,
-                      child: Text(c, overflow: TextOverflow.ellipsis),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) category = val;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate() && _selectedTemplate != null) {
-                final cleanName = nameController.text.trim();
-                final lowerName = cleanName.toLowerCase();
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate() && _selectedTemplate != null) {
+                    final cleanName = nameController.text.trim();
+                    final lowerName = cleanName.toLowerCase();
 
-                final isDuplicate = _templateItems.any(
-                  (i) => i.name.trim().toLowerCase() == lowerName,
-                );
+                    final isDuplicate = _templateItems.any(
+                      (i) => i.name.trim().toLowerCase() == lowerName,
+                    );
 
-                if (isDuplicate) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('An item named "$cleanName" already exists in this template preset.'),
-                    ),
-                  );
-                  return;
-                }
+                    if (isDuplicate) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('An item named "$cleanName" already exists in this template preset.'),
+                        ),
+                      );
+                      return;
+                    }
 
-                final qty = int.parse(qtyController.text.trim());
-                final price = double.parse(priceController.text.trim());
-                final notesText = notesController.text.trim();
+                    final qty = int.parse(qtyController.text.trim());
+                    final price = double.parse(priceController.text.trim());
+                    final notesText = notesController.text.trim();
 
-                final newItem = PurchaseItem(
-                  id: DateTime.now().microsecondsSinceEpoch.toString(),
-                  groupId: _selectedTemplate!.id,
-                  name: cleanName,
-                  quantity: qty,
-                  plannedPrice: price,
-                  category: category,
-                  notes: notesText.isEmpty ? null : notesText,
-                );
+                    final newItem = PurchaseItem(
+                      id: DateTime.now().microsecondsSinceEpoch.toString(),
+                      groupId: _selectedTemplate!.id,
+                      name: cleanName,
+                      quantity: qty,
+                      plannedPrice: price,
+                      category: category,
+                      notes: notesText.isEmpty ? null : notesText,
+                    );
 
-                setState(() {
-                  _templateItems.add(newItem);
-                });
+                    setState(() {
+                      _templateItems.add(newItem);
+                    });
 
-                _saveTemplateItems();
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
+                    _saveTemplateItems();
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
