@@ -280,7 +280,9 @@ class _PurchaseFormBottomSheetState
     final isEditing = widget.existingItem != null;
     final purchasedUnitCount = _unitDates.where((d) => d != null).length;
     final availableSubs = _availableSubGroups;
+    final qtyInput = int.tryParse(_quantityController.text) ?? 1;
     final plannedP = double.tryParse(_plannedPriceController.text.trim()) ?? 0.0;
+    final totalPlannedAmount = qtyInput * plannedP;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -478,7 +480,9 @@ class _PurchaseFormBottomSheetState
                       ),
                       inputFormatters: [_priceInputFormatter],
                       decoration: InputDecoration(
-                        labelText: 'Planned Price (${CurrencyManager.currentSymbol}) *',
+                        labelText: qtyInput > 1 && totalPlannedAmount > 0
+                            ? 'Planned Price (${CurrencyManager.currentSymbol}) * (${formatCurrency(totalPlannedAmount)})'
+                            : 'Planned Price (${CurrencyManager.currentSymbol}) *',
                         hintText: '8000',
                         border: const OutlineInputBorder(),
                         prefixIcon: Padding(
