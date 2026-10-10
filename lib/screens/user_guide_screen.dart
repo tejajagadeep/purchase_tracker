@@ -115,7 +115,7 @@ class UserGuideScreen extends StatelessWidget {
                 _GuideStep(
                   title: 'Add New Purchase (+)',
                   detail:
-                      'Tap the "+ Add Purchase" floating action button. Enter Item Name, Planned Quantity, and Planned Price ($symbol). Max 12-digit prices supported with full decimal precision (e.g., ${symbol}49.50).',
+                      'Tap the "+ Add Purchase" floating action button. Enter Item Name, Planned Quantity, and Planned Price ($symbol). When quantity > 1, the input label automatically displays the calculated total amount (e.g., Planned Price ($symbol) * (${symbol}600.00)). Max 12-digit prices supported with full decimal precision.',
                 ),
                 _GuideStep(
                   title: 'Duplicate Name Protection',
